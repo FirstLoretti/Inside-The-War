@@ -1,0 +1,8 @@
+.godot/
+*.import
+bin/
+obj/
+.vs/
+.vscode/
+*.sln
+*.csproj

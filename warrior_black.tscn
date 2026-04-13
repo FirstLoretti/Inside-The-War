@@ -1,0 +1,134 @@
+[gd_scene format=3 uid="uid://fxq4dj7ikcrl"]
+
+[ext_resource type="Texture2D" uid="uid://be0ce22giv5df" path="res://Units/Black Units/Warrior/Warrior_Idle.png" id="1_n4ojr"]
+[ext_resource type="Texture2D" uid="uid://of3m4ltbf4k" path="res://Units/Black Units/Warrior/Warrior_Run.png" id="3_61x85"]
+
+[sub_resource type="GDScript" id="GDScript_m2147"]
+script/source = "extends CharacterBody2D
+
+@onready var animator = $AnimationPlayer
+var last_position = Vector2.ZERO
+var speed = 200
+
+func _process(delta: float) -> void:
+	var path_traveled = global_position.distance_to(last_position)
+	if path_traveled > 0.1:
+		animator.play(\"Run\")
+	else:
+		animator.play(\"Idle\")
+	
+	last_position = global_position
+"
+
+[sub_resource type="Animation" id="Animation_m2147"]
+resource_name = "Idle"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.099999994, 0.19999999, 0.3, 0.4, 0.5, 0.6, 0.7),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6, 7]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:texture")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("1_n4ojr")]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:hframes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [8]
+}
+
+[sub_resource type="Animation" id="Animation_61x85"]
+length = 0.001
+
+[sub_resource type="Animation" id="Animation_t7o5p"]
+resource_name = "Run"
+length = 0.6
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:texture")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("3_61x85")]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:hframes")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [6]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_t7o5p"]
+_data = {
+&"Idle": SubResource("Animation_m2147"),
+&"RESET": SubResource("Animation_61x85"),
+&"Run": SubResource("Animation_t7o5p")
+}
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_7kaga"]
+radius = 34.0
+height = 92.0
+
+[node name="Warrior_Black" type="CharacterBody2D" unique_id=1855529046]
+z_index = 1
+script = SubResource("GDScript_m2147")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
+unique_name_in_owner = true
+position = Vector2(1, 1)
+texture = ExtResource("1_n4ojr")
+hframes = 8
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=836985193]
+libraries/ = SubResource("AnimationLibrary_t7o5p")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
+position = Vector2(-1, -5)
+shape = SubResource("CapsuleShape2D_7kaga")
