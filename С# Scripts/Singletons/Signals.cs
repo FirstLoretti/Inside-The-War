@@ -6,6 +6,8 @@ public partial class Signals : Node
 {
     [Signal]
     public delegate void PlayerLeaderPositionChangedEventHandler(Vector2 newPosition, int vision, int squadID);
+    [Signal]
+    public delegate void EntityMovedEventHandler(int id, Vector2I targetCell, float vision);
 
     public static Signals Instance { get; private set; }
 

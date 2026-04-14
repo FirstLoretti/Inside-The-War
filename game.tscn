@@ -1,20 +1,20 @@
 [gd_scene format=4 uid="uid://bh73u1p2p02rg"]
 
-[ext_resource type="Script" uid="uid://bggyl0e3qqq5w" path="res://player_unit_manager.gd" id="1_7jktm"]
-[ext_resource type="Texture2D" uid="uid://exyxy856p8b0" path="res://Terrain/Tileset/Tilemap_color1.png" id="1_e2o6t"]
-[ext_resource type="Script" uid="uid://2kklgrdwax3c" path="res://game.gd" id="1_hve3p"]
-[ext_resource type="Texture2D" uid="uid://dndfucdknm75i" path="res://Fog Of War/white_square.png" id="3_iotsf"]
-[ext_resource type="Script" uid="uid://dv6u45vl13n76" path="res://enemy_unit_manager.gd" id="3_vef74"]
-[ext_resource type="Script" uid="uid://c4lida5tbfn5h" path="res://spawn_manager.gd" id="4_7jktm"]
-[ext_resource type="Script" uid="uid://cjao0sy7t8asc" path="res://fog_manager.gd" id="4_lc2xo"]
-[ext_resource type="Script" uid="uid://dw1kiie7pcwk3" path="res://grid_manager.gd" id="5_ryrav"]
-[ext_resource type="PackedScene" uid="uid://c2kur2uwvm1lj" path="res://warrior_red.tscn" id="6_j5wjh"]
-[ext_resource type="PackedScene" uid="uid://ccg4bq4knux3c" path="res://warrior_blue.tscn" id="7_vef74"]
-[ext_resource type="Script" uid="uid://bvpibm072ttdb" path="res://select_manager.gd" id="8_hve3p"]
-[ext_resource type="Script" uid="uid://d281dwfdf31i2" path="res://ui_manager.gd" id="8_j5wjh"]
+[ext_resource type="Script" uid="uid://2kklgrdwax3c" path="res://GDScripts/Old/game.gd" id="1_gwjdr"]
+[ext_resource type="Texture2D" uid="uid://exyxy856p8b0" path="res://Assets/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="2_lvtmh"]
+[ext_resource type="Texture2D" uid="uid://dndfucdknm75i" path="res://FogOfWar/WhiteSquare.png" id="3_yyih5"]
+[ext_resource type="Script" uid="uid://cjao0sy7t8asc" path="res://GDScripts/Old/fog_manager.gd" id="4_qjyg3"]
+[ext_resource type="Script" uid="uid://bggyl0e3qqq5w" path="res://GDScripts/Old/player_unit_manager.gd" id="5_elkpi"]
+[ext_resource type="Script" uid="uid://dv6u45vl13n76" path="res://GDScripts/Old/enemy_unit_manager.gd" id="6_0yprl"]
+[ext_resource type="Script" uid="uid://dw1kiie7pcwk3" path="res://GDScripts/Old/grid_manager.gd" id="7_wuoie"]
+[ext_resource type="Script" uid="uid://c4lida5tbfn5h" path="res://GDScripts/Old/spawn_manager.gd" id="8_bvhbk"]
+[ext_resource type="PackedScene" uid="uid://c2kur2uwvm1lj" path="res://WarriorRed.tscn" id="9_cpsxm"]
+[ext_resource type="PackedScene" uid="uid://ccg4bq4knux3c" path="res://WarriorBlue.tscn" id="10_hmewc"]
+[ext_resource type="Script" uid="uid://bvpibm072ttdb" path="res://GDScripts/Old/select_manager.gd" id="11_7ged1"]
+[ext_resource type="Script" uid="uid://d281dwfdf31i2" path="res://GDScripts/Old/ui_manager.gd" id="12_0mevm"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_feb5d"]
-texture = ExtResource("1_e2o6t")
+texture = ExtResource("2_lvtmh")
 texture_region_size = Vector2i(64, 64)
 1:0/0 = 0
 3:0/0 = 0
@@ -66,7 +66,7 @@ tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_feb5d")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_215e1"]
-texture = ExtResource("3_iotsf")
+texture = ExtResource("3_yyih5")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
@@ -75,7 +75,7 @@ tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_215e1")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_80cx4"]
-texture = ExtResource("3_iotsf")
+texture = ExtResource("3_yyih5")
 texture_region_size = Vector2i(64, 64)
 0:0/0 = 0
 
@@ -87,11 +87,11 @@ sources/0 = SubResource("TileSetAtlasSource_80cx4")
 bg_color = Color(0.6313726, 0.6313726, 0.6313726, 0)
 
 [node name="Game" type="Node2D" unique_id=341590171]
-script = ExtResource("1_hve3p")
+script = ExtResource("1_gwjdr")
 
 [node name="Map" type="Node2D" parent="." unique_id=1731826869]
 
-[node name="MainMap" type="TileMapLayer" parent="Map" unique_id=767585441 groups=["main_map"]]
+[node name="MainMap" type="TileMapLayer" parent="Map" unique_id=767585441]
 scale = Vector2(1.875, 1.875)
 tile_map_data = PackedByteArray("AAACAAIAAAAFAAAAAAACAAMAAAAFAAEAAAACAAQAAAAFAAEAAAACAAUAAAAFAAEAAAAGAAYAAAAGAAIAAAAHAAYAAAAGAAIAAAAJAAYAAAAGAAIAAAAFAAcAAAAGAAQAAAAEAAcAAAAGAAQAAAADAAcAAAAGAAQAAAAGAAcAAAAGAAQAAAAHAAcAAAAGAAQAAAAIAAcAAAAGAAQAAAAJAAcAAAAGAAQAAAAKAAYAAAAHAAIAAAACAAcAAAAFAAQAAAADAAIAAAAGAAAAAAAKAAcAAAAHAAQAAAAKAAMAAAAHAAEAAAAKAAQAAAAHAAEAAAAKAAUAAAAHAAEAAAAJAAMAAAAGAAEAAAAIAAMAAAAGAAEAAAAHAAMAAAAGAAEAAAAGAAMAAAAGAAEAAAAFAAMAAAAGAAEAAAAEAAMAAAAGAAEAAAAJAAQAAAAGAAEAAAAJAAUAAAAGAAEAAAAIAAUAAAAGAAEAAAAHAAUAAAAGAAEAAAAGAAUAAAAGAAEAAAAFAAUAAAAGAAEAAAAEAAUAAAAGAAEAAAAIAAQAAAABAAEAAAAHAAQAAAABAAEAAAAGAAQAAAABAAEAAAAFAAQAAAABAAEAAAAEAAQAAAABAAEAAAADAAQAAAABAAEAAAADAAMAAAABAAEAAAADAAUAAAABAAEAAAAEAAYAAAAGAAIAAAADAAYAAAAGAAIAAAAFAAYAAAAGAAIAAAAIAAYAAAAGAAIAAAAEAAIAAAAGAAAAAAAFAAIAAAAGAAAAAAAGAAIAAAAGAAAAAAAHAAIAAAAGAAAAAAAIAAIAAAAGAAAAAAAJAAIAAAAGAAAAAAAKAAIAAAAHAAAAAAACAAYAAAAFAAIAAAA=")
 tile_set = SubResource("TileSet_fc0e3")
@@ -113,36 +113,36 @@ tile_map_data = PackedByteArray("AAADAAMAAAAAAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAA
 tile_set = SubResource("TileSet_e8heu")
 
 [node name="FogManager" type="Node" parent="Map" unique_id=1840486662]
-script = ExtResource("4_lc2xo")
+script = ExtResource("4_qjyg3")
 
 [node name="Managers" type="Node" parent="." unique_id=353278863]
 
 [node name="PlayerUnitManager" type="Node2D" parent="Managers" unique_id=1260981742]
 unique_name_in_owner = true
-script = ExtResource("1_7jktm")
+script = ExtResource("5_elkpi")
 
 [node name="EnemyUnitManager" type="Node2D" parent="Managers" unique_id=1919819568]
-script = ExtResource("3_vef74")
+script = ExtResource("6_0yprl")
 
 [node name="Timer" type="Timer" parent="Managers/EnemyUnitManager" unique_id=1505183881]
 autostart = true
 
 [node name="GridManager" type="Node2D" parent="Managers" unique_id=449884433]
 unique_name_in_owner = true
-script = ExtResource("5_ryrav")
+script = ExtResource("7_wuoie")
 
 [node name="SpawnManager" type="Node" parent="Managers" unique_id=1145693780]
 unique_name_in_owner = true
-script = ExtResource("4_7jktm")
-unit_red = ExtResource("6_j5wjh")
-unit_blue = ExtResource("7_vef74")
+script = ExtResource("8_bvhbk")
+unit_red = ExtResource("9_cpsxm")
+unit_blue = ExtResource("10_hmewc")
 
 [node name="SelectManager" type="Node" parent="Managers" unique_id=2015783941]
 unique_name_in_owner = true
-script = ExtResource("8_hve3p")
+script = ExtResource("11_7ged1")
 
 [node name="UIManager" type="CanvasLayer" parent="Managers" unique_id=534937228]
-script = ExtResource("8_j5wjh")
+script = ExtResource("12_0mevm")
 
 [node name="UI" type="Node" parent="." unique_id=594093216]
 

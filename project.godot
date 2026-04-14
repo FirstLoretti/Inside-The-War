@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="Inside the War"
-run/main_scene="res://game.tscn"
+run/main_scene="res://Game.tscn"
 config/features=PackedStringArray("4.6", "C#", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://Icon.svg"
 
 [autoload]
 
