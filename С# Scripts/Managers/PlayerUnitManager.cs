@@ -2,20 +2,21 @@ using Godot;
 using InsideTheWar.Singletons;
 using System.Linq;
 using InsideTheWar.Entities;
+using InsideTheWar.Helpers;
 
 namespace InsideTheWar.Managers;
 
 public partial class PlayerUnitManager : Node
 {
     [ExportGroup("Nodes")]
-    [Export] private Node _unitsContainer;
+    [Export] private Node2D _unitsContainer;
 
     [ExportGroup("Technical")]
-    [Export] private float _unitClickOverlapRadius = 25.0f;
     [Export] private float _minSquadMoveDistance = 50.0f;
 
     [ExportGroup("Managers")]
     [Export] private GridManager _gridManager;
+    [Export] private SelectionManager _selectionManager;
 
     private Vector2I _lastCell;
 
@@ -23,23 +24,23 @@ public partial class PlayerUnitManager : Node
     {
         base._Ready();
 
-        Signals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
+        GlobalSignals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
 
     }
 
-    private void MoveSquadTo(Vector2 mousePosition)
+    public void MoveSquadTo(Vector2 mousePosition)
     {
+        var selectedUnits = _selectionManager.SelectedUnits;
         var allUnits = _unitsContainer.GetChildren().OfType<PlayerUnit>().ToArray();
-        var selectedUnits = allUnits.Where(unit => unit.IsSelected).ToArray();
 
-        if (selectedUnits.Length == 0)
+        if (selectedUnits.Count == 0)
         {
             return;
         }
 
         foreach (var unit in allUnits)
         {
-            if (unit.GlobalPosition.DistanceTo(mousePosition) < _unitClickOverlapRadius)
+            if (unit.GlobalPosition.DistanceTo(mousePosition) < _selectionManager.UnitClickOverlapRadius)
             {
                 GD.Print("Clicked on Unit");
                 return;
@@ -51,7 +52,7 @@ public partial class PlayerUnitManager : Node
         {
             squadCenter += unit.GlobalPosition;
         }
-        squadCenter /= selectedUnits.Length;
+        squadCenter /= selectedUnits.Count;
 
         if (squadCenter.DistanceTo(mousePosition) < _minSquadMoveDistance)
         {
@@ -62,35 +63,30 @@ public partial class PlayerUnitManager : Node
         var leader = selectedUnits[0];
         Vector2I targetCell = _gridManager.TargetCell(mousePosition);
         _gridManager.ClearCellOccupation(leader.SquadId);
-        _gridManager.UpdateOccupation(leader.GlobalPosition, targetCell, leader.SquadId);
+        _gridManager.UpdateOccupation(leader);
 
         foreach (var unit in selectedUnits)
         {
-            Vector2 offset = CalculateFormationOffset(unit);
-            unit.MoveTo(mousePosition + offset);
+            var offset = FormationMath.CalculateOffset(unit.Col, unit.Row,
+            unit.FormationCols, unit.FormationRows, unit.FormationSpacing);
+
+            unit.TargetPosition = mousePosition + offset;
         }
     }
     private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
     {
         Vector2I targetCell = _gridManager.TargetCell(position);
-        if( targetCell != _lastCell)
+        if (targetCell != _lastCell)
         {
-            Signals.Instance.EmitSignal
-            (Signals.SignalName.EntityMoved, squadId, targetCell, vision);
+            GlobalSignals.Instance.EmitSignal
+            (GlobalSignals.SignalName.EntityMoved, squadId, targetCell, vision);
         }
     }
-    private Vector2 CalculateFormationOffset(PlayerUnit playerUnit)
+
+    public override void _ExitTree()
     {
-        var c = playerUnit.MyCol;
-        var r = playerUnit.MyRow;
-        var s = playerUnit.FormationSpacing;
-        var c_count = playerUnit.FormationCols;
-        var r_count = playerUnit.FormationRows;
-
-        float offset_x = (c - (c_count - 1.0f) / 2.0f) * s;
-        float offset_y = (r - (r_count - 1.0f) / 2.0f) * s;
-
-        return new Vector2(offset_x, offset_y);
+        base._ExitTree();
+        GlobalSignals.Instance.PlayerLeaderPositionChanged -= OnLeaderPositionChanged;
     }
 
 }

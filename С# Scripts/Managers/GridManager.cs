@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Godot;
+using InsideTheWar.Entities;
+using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Managers;
 
@@ -17,15 +19,23 @@ public partial class GridManager : Node2D
 
     public void SetOccupied(Vector2 pos, int entityId) => _occupiedCells[TargetCell(pos)] = entityId;
 
-    public void UpdateOccupation(Vector2 oldPos, Vector2 newPos, int entityId)
+
+    public override void _Ready()
     {
-        Vector2I oldCell = TargetCell(oldPos);
-        Vector2I newCell = TargetCell(newPos);
+        base._Ready();
+
+        GlobalSignals.Instance.UnitSpawned += UpdateOccupation;
+    }
+
+    public void UpdateOccupation(Unit unit)
+    {
+        Vector2I oldCell = TargetCell(unit.LastPosition);
+        Vector2I newCell = TargetCell(unit.TargetPosition);
 
         if (oldCell == newCell) { return; }
 
         _occupiedCells.Remove(oldCell);
-        _occupiedCells[newCell] = entityId;
+        _occupiedCells[newCell] = unit.SquadId;
     }
 
     public override void _Draw()
@@ -83,4 +93,12 @@ public partial class GridManager : Node2D
 
         return false;
     }
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+
+        GlobalSignals.Instance.UnitSpawned -= UpdateOccupation;
+    }
+
 }
