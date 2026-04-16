@@ -5,7 +5,8 @@ namespace InsideTheWar.Entities;
 public partial class Unit : CharacterBody2D
 {
     [ExportGroup("Stats")]
-    [Export] protected float _speed = 150.0f;
+    [Export] protected float _maxSpeed { get; set; } = 150.0f;
+    [Export] protected float _minSpeed { get; set; } = 75.0f;
     [Export] protected int _visionRadius = 1;
     public int VisionRadius => _visionRadius;
 
@@ -18,7 +19,7 @@ public partial class Unit : CharacterBody2D
     public int FormationSpacing => _formationSpacing;
 
     [ExportGroup("Technical")]
-    [Export] protected float _stoppingDistance { get; set; } = 10.0f;
+    [Export] protected float _stoppingDistance { get; set; } = 5.0f;
     [Export] protected float _arrivalDistance { get; set; } = 50.0f;
 
     private AnimationPlayer _animationPlayer;
@@ -36,8 +37,11 @@ public partial class Unit : CharacterBody2D
     {
         base._Ready();
         LastPosition = GlobalPosition;
+        TargetPosition = GlobalPosition;
         _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _sprite2D = GetNode<Sprite2D>("Sprite2D");
+        GD.Print($"Gp {GlobalPosition}");
+        GD.Print($"Tp {TargetPosition}");
     }
 
     public override void _Process(double delta)
@@ -50,29 +54,30 @@ public partial class Unit : CharacterBody2D
     {
         float distance = GlobalPosition.DistanceTo(TargetPosition);
 
-        if (distance < _stoppingDistance)
+        if (distance <= _stoppingDistance)
         {
-            if (Velocity != Vector2.Zero)
+            Velocity = Vector2.Zero;
+            GlobalPosition = TargetPosition;
+            _animationPlayer.Play("Idle");
+        }
+        else
+        {
+            Vector2 direction = GlobalPosition.DirectionTo(TargetPosition);
+            var speedThisFrame = _maxSpeed;
+
+            if (distance < _arrivalDistance)
             {
-                GlobalPosition = TargetPosition;
-                Velocity = Vector2.Zero;
-                _animationPlayer.Play("Idle");
+                speedThisFrame = _maxSpeed * (distance / _arrivalDistance);
             }
-            return;
+
+            speedThisFrame = Mathf.Max(speedThisFrame, _minSpeed);
+            GD.Print($"{speedThisFrame}");
+            Velocity = direction * speedThisFrame;
+            MoveAndSlide();
+
+            _animationPlayer.Play("Run");
+            _sprite2D.FlipH = direction.X < 0.0f;
         }
-
-        Vector2 direction = GlobalPosition.DirectionTo(TargetPosition);
-        Velocity = direction * _speed;
-
-        if (distance < _arrivalDistance)
-        {
-            Velocity *= distance / _arrivalDistance;
-        }
-
-        MoveAndSlide();
-        _animationPlayer.Play("Run");
-        _sprite2D.FlipH = direction.X < 0.0f;
     }
-
 }
 

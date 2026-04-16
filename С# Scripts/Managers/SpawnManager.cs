@@ -10,8 +10,8 @@ namespace InsideTheWar.Managers;
 public partial class SpawnManager : Node
 {
     [ExportGroup("Units")]
-    [Export] private PackedScene _unitEngland;
-    [Export] private PackedScene _unitFrance;
+    [Export] public PackedScene UnitEngland { get; private set; }
+    [Export] public PackedScene UnitFrance { get; private set; }
 
     [ExportGroup("EntityContainer")]
     [Export] private Node2D _playerUnits;
@@ -29,6 +29,7 @@ public partial class SpawnManager : Node
             {"PlayerUnits", _playerUnits},
             {"EnemyUnits", _enemyUnits}
         };
+
     }
 
     public int SpawnSquad(Vector2 spawnPos, PackedScene unit, string team)
@@ -80,8 +81,4 @@ public partial class SpawnManager : Node
         return currentSquadId;
     }
 
-    public void RequestSpawn(Vector2 mousePos, string team)
-    {
-        
-    }
 }
