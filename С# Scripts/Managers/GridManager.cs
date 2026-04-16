@@ -7,13 +7,13 @@ namespace InsideTheWar.Managers;
 
 public partial class GridManager : Node2D
 {
-    [Export] private TileMapLayer _tileMapLayer;
+    [Export] private TileMapLayer _mainMap;
 
     private Dictionary<Vector2I, int> _occupiedCells = new Dictionary<Vector2I, int>();
 
-    public Vector2 TargetPixels(Vector2I targetCell) => _tileMapLayer.MapToLocal(targetCell);
+    public Vector2 TargetPixels(Vector2I targetCell) => _mainMap.MapToLocal(targetCell);
 
-    public Vector2I TargetCell(Vector2 targetPixels) => _tileMapLayer.LocalToMap(targetPixels);
+    public Vector2I TargetCell(Vector2 targetPixels) => _mainMap.LocalToMap(targetPixels);
 
     public bool IsCellOccupied(Vector2I cellCoords) => _occupiedCells.ContainsKey(cellCoords);
 

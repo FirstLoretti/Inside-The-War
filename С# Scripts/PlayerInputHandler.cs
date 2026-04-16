@@ -1,11 +1,12 @@
 using Godot;
 using InsideTheWar.Managers;
+using InsideTheWar.Singletons;
 
-namespace InsideTheWar.PlayerInput;
+namespace InsideTheWar;
 
 public partial class PlayerInputHandler : Node2D
 {
-    [Export] private SelectionManager _selectManager;
+    [Export] private SelectionManager _selectionManager;
     [Export] private SpawnManager _spawnManager;
     [Export] private PlayerUnitManager _playerUnitManager;
 
@@ -21,15 +22,15 @@ public partial class PlayerInputHandler : Node2D
             {
                 if (Input.IsKeyPressed(Key.Shift))
                 {
-                    _selectManager.SelectSquad(mousePos);
+                    _selectionManager.SelectSquad(mousePos);
                 }
                 else if (Input.IsKeyPressed(Key.Ctrl))
                 {
-                    _spawnManager.RequestSpawn(mousePos, "Enemy");
+                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "Enemy");
                 }
                 else
                 {
-                    _spawnManager.RequestSpawn(mousePos, "Player");
+                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "Player");
                 }
             }
             else if (mouseEvent.ButtonIndex == MouseButton.Right)

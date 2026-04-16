@@ -11,6 +11,8 @@ public partial class GlobalSignals : Node
     public delegate void EntityMovedEventHandler(int id, Vector2I targetCell, float vision);
     [Signal]
     public delegate void UnitSpawnedEventHandler(Unit unit);
+    [Signal]
+    public delegate void RequestSpawnEventHandler(Vector2 mousPos, string team);
 
     public static GlobalSignals Instance { get; private set; }
 
