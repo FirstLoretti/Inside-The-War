@@ -67,7 +67,7 @@ public partial class PlayerUnitManager : Node
 
         foreach (var unit in selectedUnits)
         {
-            var offset = FormationMath.CalculateOffset(unit.Col, unit.Row,
+            var offset = GameMath.CalculateOffset(unit.Col, unit.Row,
             unit.FormationCols, unit.FormationRows, unit.FormationSpacing);
 
             unit.TargetPosition = mousePosition + offset;

@@ -102,6 +102,7 @@ _data = {
 z_index = 1
 scale = Vector2(0.4, 0.4)
 script = ExtResource("1_6cisj")
+_minSpeed = 100.0
 _stoppingDistance = 3.0
 _arrivalDistance = 300.0
 

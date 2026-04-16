@@ -12,10 +12,11 @@ public partial class LevelController : Node
     {
         base._Ready();
 
-        GlobalSignals.Instance.RequestSpawn += RequestSpawn;
+        GlobalSignals.Instance.RequestSpawn += OnRequestSpawn;
+
     }
 
-    public void RequestSpawn(Vector2 mousePos, string team)
+    public void OnRequestSpawn(Vector2 mousePos, string team)
     {
         var cell = _gridManager.TargetCell(mousePos);
         if (_gridManager.IsCellOccupied(cell))
@@ -39,7 +40,7 @@ public partial class LevelController : Node
     {
         base._ExitTree();
 
-        GlobalSignals.Instance.RequestSpawn -= RequestSpawn;
+        GlobalSignals.Instance.RequestSpawn -= OnRequestSpawn;
     }
 
 }

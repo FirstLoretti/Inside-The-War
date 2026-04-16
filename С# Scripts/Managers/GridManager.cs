@@ -24,18 +24,27 @@ public partial class GridManager : Node2D
     {
         base._Ready();
 
-        GlobalSignals.Instance.UnitSpawned += UpdateOccupation;
+        GlobalSignals.Instance.UnitSpawned += OnUnitSpawned;
     }
 
+    private void OnUnitSpawned(Unit unit)
+    {
+        var spawnCell = TargetCell(unit.GlobalPosition);
+        _occupiedCells[spawnCell] = unit.SquadId;
+
+        unit.LastPosition = unit.GlobalPosition;
+    }
     public void UpdateOccupation(Unit unit)
     {
         Vector2I oldCell = TargetCell(unit.LastPosition);
-        Vector2I newCell = TargetCell(unit.TargetPosition);
+        Vector2I newCell = TargetCell(unit.GlobalPosition);
 
         if (oldCell == newCell) { return; }
 
         _occupiedCells.Remove(oldCell);
         _occupiedCells[newCell] = unit.SquadId;
+
+        unit.LastPosition = unit.GlobalPosition;
     }
 
     public override void _Draw()
@@ -98,7 +107,7 @@ public partial class GridManager : Node2D
     {
         base._ExitTree();
 
-        GlobalSignals.Instance.UnitSpawned -= UpdateOccupation;
+        GlobalSignals.Instance.UnitSpawned -= OnUnitSpawned;
     }
 
 }

@@ -55,21 +55,21 @@ public partial class SpawnManager : Node
             for (int col = 0; col < cols; col++)
             {
                 var newUnit = unit.Instantiate<Unit>();
-
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.UnitSpawned, newUnit);
-
                 newUnit.Col = col;
                 newUnit.Row = row;
                 newUnit.SquadId = currentSquadId;
-
                 newUnit.AddToGroup(team + "Units");
 
-                var offset = FormationMath.CalculateOffset(col, row,
+                var offset = GameMath.CalculateOffset(col, row,
                 newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
 
                 newUnit.GlobalPosition = spawnPos + offset;
 
                 parentNode.AddChild(newUnit);
+
+                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.UnitSpawned, newUnit);
+                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
+                newUnit.SquadId, newUnit.LastPosition, newUnit.GlobalPosition, newUnit.VisionRadius);
 
                 if (leader == null)
                 {
