@@ -67,9 +67,9 @@ public partial class SpawnManager : Node
 
                 parentNode.AddChild(newUnit);
 
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.UnitSpawned, newUnit);
+                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EnitySpawned, newUnit.GetInstanceId(), newUnit.GlobalPosition);
                 GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-                newUnit.SquadId, newUnit.LastPosition, newUnit.GlobalPosition, newUnit.VisionRadius);
+                newUnit.GetInstanceId(), newUnit.LastSignaledPos, newUnit.GlobalPosition, newUnit.VisionRadius);
 
                 if (leader == null)
                 {

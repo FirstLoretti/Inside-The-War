@@ -12,7 +12,7 @@ public partial class FogOfWar : Node
     [Export] private TileMapLayer _fogExplored;
 
     private HashSet<Vector2I> _exploredCells = new();
-    private Dictionary<int, (Vector2I currentCell, int vision)> _squadVision = new();
+    //private Dictionary<int, (Vector2I currentCell, int vision)> _squadVision = new();
 
     public override void _Ready()
     {
@@ -20,7 +20,7 @@ public partial class FogOfWar : Node
         GlobalSignals.Instance.EntityMoved += OnEntityMoved;
     }
 
-    private void OnEntityMoved(int id, Vector2 oldPos, Vector2 currentPos, int vision)
+    private void OnEntityMoved(ulong id, Vector2 oldPos, Vector2 currentPos, int vision)
     {
         
         var oldCell = _mainMap.LocalToMap(oldPos);
@@ -40,7 +40,7 @@ public partial class FogOfWar : Node
             _fogExplored.SetCell(cell, -1);
         }
     }
-
+    /*
     private void RevealAndRemember(Vector2I currentCell, int vision)
     {
         foreach (var cell in GameMath.GetCellsInRadius(currentCell, vision))
@@ -59,7 +59,7 @@ public partial class FogOfWar : Node
         }
 
     }
-
+    */
     public override void _ExitTree()
     {
         base._ExitTree();

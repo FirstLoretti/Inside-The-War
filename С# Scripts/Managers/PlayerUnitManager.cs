@@ -24,7 +24,7 @@ public partial class PlayerUnitManager : Node
     {
         base._Ready();
 
-        GlobalSignals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
+        //GlobalSignals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
 
     }
 
@@ -60,10 +60,10 @@ public partial class PlayerUnitManager : Node
             return;
         }
 
-        var leader = selectedUnits[0];
-        Vector2I targetCell = _gridManager.TargetCell(mousePosition);
-        _gridManager.ClearCellOccupation(leader.SquadId);
-        _gridManager.UpdateOccupation(leader);
+        //var leader = selectedUnits[0];
+        //Vector2I targetCell = _gridManager.TargetCell(mousePosition);
+        //_gridManager.ClearCellOccupation(leader.SquadId);
+        //_gridManager.UpdateOccupation(leader);
 
         foreach (var unit in selectedUnits)
         {
@@ -73,6 +73,7 @@ public partial class PlayerUnitManager : Node
             unit.TargetPosition = mousePosition + offset;
         }
     }
+    /*
     private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
     {
         Vector2I targetCell = _gridManager.TargetCell(position);
@@ -82,11 +83,12 @@ public partial class PlayerUnitManager : Node
             (GlobalSignals.SignalName.EntityMoved, squadId, targetCell, vision);
         }
     }
-
+    
     public override void _ExitTree()
     {
         base._ExitTree();
         GlobalSignals.Instance.PlayerLeaderPositionChanged -= OnLeaderPositionChanged;
     }
+    */
 
 }

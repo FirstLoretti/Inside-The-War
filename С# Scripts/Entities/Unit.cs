@@ -22,27 +22,24 @@ public partial class Unit : CharacterBody2D
     [ExportGroup("Technical")]
     [Export] protected float _stoppingDistance = 5.0f;
     [Export] protected float _arrivalDistance = 50.0f;
-    [Export] private float _updateFogTreshold = 32.0f;
+    [Export] private float _updateSignalsTreshold = 32.0f;
 
     private AnimationPlayer _animationPlayer;
     private Sprite2D _sprite2D;
 
-    public Vector2 LastPosition { get; set; }
     public Vector2 TargetPosition { get; set; }
-    public int SquadId;
-    public int Row;
-    public int Col;
-
-    private Vector2 _lastSignaledPos;
+    public Vector2 LastSignaledPos { get; set; }
+    public int SquadId { get; set; }
+    public int Row { get; set; }
+    public int Col { get; set; }
 
     public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
 
     public override void _Ready()
     {
         base._Ready();
-        LastPosition = GlobalPosition;
         TargetPosition = GlobalPosition;
-        _lastSignaledPos = GlobalPosition;
+        LastSignaledPos = GlobalPosition;
         _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _sprite2D = GetNode<Sprite2D>("Sprite2D");
         GD.Print($"Gp {GlobalPosition}");
@@ -61,14 +58,18 @@ public partial class Unit : CharacterBody2D
 
         if (distance <= _stoppingDistance)
         {
-            if (GlobalPosition != _lastSignaledPos)
+            GlobalPosition = TargetPosition;
+
+            if (GlobalPosition != LastSignaledPos)
             {
-                CheckFogUpdate();
+                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
+                GetInstanceId(), LastSignaledPos, GlobalPosition, VisionRadius);
+                LastSignaledPos = GlobalPosition;
             }
 
             Velocity = Vector2.Zero;
-            GlobalPosition = TargetPosition;
             _animationPlayer.Play("Idle");
+
         }
         else
         {
@@ -94,12 +95,12 @@ public partial class Unit : CharacterBody2D
 
     private void CheckFogUpdate()
     {
-        if (GlobalPosition.DistanceTo(_lastSignaledPos) > _updateFogTreshold)
+        if (GlobalPosition.DistanceTo(LastSignaledPos) > _updateSignalsTreshold)
         {
             GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-            SquadId, _lastSignaledPos, GlobalPosition, VisionRadius);
+            GetInstanceId(), LastSignaledPos, GlobalPosition, VisionRadius);
 
-            _lastSignaledPos = GlobalPosition;
+            LastSignaledPos = GlobalPosition;
         }
     }
 }

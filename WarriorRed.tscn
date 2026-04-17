@@ -107,7 +107,7 @@ _stoppingDistance = 3.0
 _arrivalDistance = 300.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
-position = Vector2(1, 1)
+position = Vector2(5.9604645e-08, -24.999996)
 texture = ExtResource("2_y7hwp")
 hframes = 8
 
@@ -115,5 +115,5 @@ hframes = 8
 libraries/ = SubResource("AnimationLibrary_t7o5p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
-position = Vector2(9.536743e-07, 24.999996)
+position = Vector2(5.684342e-14, 0)
 shape = SubResource("CircleShape2D_bsv7r")
