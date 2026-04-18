@@ -60,7 +60,7 @@ public partial class SpawnManager : Node
                 newUnit.SquadId = currentSquadId;
                 newUnit.AddToGroup(team + "Units");
 
-                var offset = GameMath.CalculateOffset(col, row,
+                var offset = GameMath.CalculateSquadOffset(col, row,
                 newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
 
                 newUnit.GlobalPosition = spawnPos + offset;

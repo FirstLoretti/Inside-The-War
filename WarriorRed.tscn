@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dywccmq1yve7e"]
 
 [ext_resource type="Script" uid="uid://dly2fmfpambtb" path="res://С# Scripts/Entities/PlayerUnit.cs" id="1_6cisj"]
+[ext_resource type="Resource" uid="uid://bm6uap7fcmnmo" path="res://С# Scripts/Data/EnglandKnight.tres" id="2_cg44j"]
 [ext_resource type="Texture2D" uid="uid://bflfnygb0p3vt" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Run.png" id="2_vcivj"]
 [ext_resource type="Texture2D" uid="uid://cxqjautwujfmy" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Idle.png" id="2_y7hwp"]
 
@@ -96,15 +97,23 @@ _data = {
 &"Run": SubResource("Animation_t7o5p")
 }
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_bsv7r"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0p4e8"]
+radius = 22.499998
+height = 64.99999
 
-[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046]
+[sub_resource type="CircleShape2D" id="CircleShape2D_7dlj6"]
+radius = 67.49999
+
+[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_avoidanceArea")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 script = ExtResource("1_6cisj")
+Stats = ExtResource("2_cg44j")
 _minSpeed = 100.0
+_formationSpacing = 30
 _stoppingDistance = 3.0
-_arrivalDistance = 300.0
+_arrivalDistance = 200.0
+_avoidanceArea = NodePath("Area2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
 position = Vector2(5.9604645e-08, -24.999996)
@@ -115,5 +124,11 @@ hframes = 8
 libraries/ = SubResource("AnimationLibrary_t7o5p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
-position = Vector2(5.684342e-14, 0)
-shape = SubResource("CircleShape2D_bsv7r")
+position = Vector2(1.4210855e-14, -22.499998)
+shape = SubResource("CapsuleShape2D_0p4e8")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1804330532]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1547266469]
+position = Vector2(0, -27.499998)
+shape = SubResource("CircleShape2D_7dlj6")

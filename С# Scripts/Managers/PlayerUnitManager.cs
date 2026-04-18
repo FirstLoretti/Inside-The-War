@@ -3,6 +3,7 @@ using InsideTheWar.Singletons;
 using System.Linq;
 using InsideTheWar.Entities;
 using InsideTheWar.Helpers;
+using System.Collections.Generic;
 
 namespace InsideTheWar.Managers;
 
@@ -47,12 +48,7 @@ public partial class PlayerUnitManager : Node
             }
         }
 
-        Vector2 squadCenter = Vector2.Zero;
-        foreach (var unit in selectedUnits)
-        {
-            squadCenter += unit.GlobalPosition;
-        }
-        squadCenter /= selectedUnits.Count;
+        var squadCenter = GameMath.CalculateSquadCenter(selectedUnits);
 
         if (squadCenter.DistanceTo(mousePosition) < _minSquadMoveDistance)
         {
@@ -64,13 +60,16 @@ public partial class PlayerUnitManager : Node
         //Vector2I targetCell = _gridManager.TargetCell(mousePosition);
         //_gridManager.ClearCellOccupation(leader.SquadId);
         //_gridManager.UpdateOccupation(leader);
-
+        var squadDirection = (mousePosition - squadCenter).Normalized();
+        var rotationAngle = squadDirection.Angle();
         foreach (var unit in selectedUnits)
         {
-            var offset = GameMath.CalculateOffset(unit.Col, unit.Row,
+            var offset = GameMath.CalculateSquadOffset(unit.Col, unit.Row,
             unit.FormationCols, unit.FormationRows, unit.FormationSpacing);
 
-            unit.TargetPosition = mousePosition + offset;
+            var rotatedOffset = offset.Rotated(rotationAngle);
+
+            unit.TargetPosition = mousePosition + rotatedOffset;
         }
     }
     /*

@@ -1,11 +1,14 @@
 using Godot;
+using InsideTheWar.Helpers;
 using InsideTheWar.Singletons;
+using InsideTheWar.Data;
 
 namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D
 {
     [ExportGroup("Stats")]
+    [Export] public BaseUnitData Stats;
     [Export] protected float _maxSpeed = 150.0f;
     [Export] protected float _minSpeed = 75.0f;
     [Export] protected int _visionRadius = 1;
@@ -23,6 +26,7 @@ public partial class Unit : CharacterBody2D
     [Export] protected float _stoppingDistance = 5.0f;
     [Export] protected float _arrivalDistance = 50.0f;
     [Export] private float _updateSignalsTreshold = 32.0f;
+    [Export] private Area2D _avoidanceArea;
 
     private AnimationPlayer _animationPlayer;
     private Sprite2D _sprite2D;
@@ -54,9 +58,9 @@ public partial class Unit : CharacterBody2D
 
     private void ProcessMovement()
     {
-        float distance = GlobalPosition.DistanceTo(TargetPosition);
+        float distanceTo = GlobalPosition.DistanceTo(TargetPosition);
 
-        if (distance <= _stoppingDistance)
+        if (distanceTo <= _stoppingDistance)
         {
             GlobalPosition = TargetPosition;
 
@@ -74,16 +78,9 @@ public partial class Unit : CharacterBody2D
         else
         {
             Vector2 direction = GlobalPosition.DirectionTo(TargetPosition);
-            var speedThisFrame = _maxSpeed;
-
-            if (distance < _arrivalDistance)
-            {
-                speedThisFrame = _maxSpeed * (distance / _arrivalDistance);
-            }
-
-            speedThisFrame = Mathf.Max(speedThisFrame, _minSpeed);
-            GD.Print($"{speedThisFrame}");
-            Velocity = direction * speedThisFrame;
+            Vector2 avoidanceDir = GameMath.CalculateAvoidance(_avoidanceArea, this);
+ 
+           // Velocity = direction * speedThisFrame;
             MoveAndSlide();
 
             _animationPlayer.Play("Run");
@@ -103,5 +100,6 @@ public partial class Unit : CharacterBody2D
             LastSignaledPos = GlobalPosition;
         }
     }
+
 }
 
