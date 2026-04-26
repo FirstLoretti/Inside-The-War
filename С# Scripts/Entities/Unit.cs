@@ -7,8 +7,11 @@ namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D
 {
+    [ExportGroup("Status")]
+    [Export] public UnitStates CurrentState { get; protected set;} = UnitStates.Idle;
+
     [ExportGroup("Stats")]
-    [Export] public BaseUnitData Stats;
+    [Export] public BaseUnitData Stats { get; private set; }
     [Export] protected float _maxSpeed = 150.0f;
     [Export] protected float _minSpeed = 75.0f;
     [Export] protected int _visionRadius = 1;
@@ -42,17 +45,18 @@ public partial class Unit : CharacterBody2D
     public override void _Ready()
     {
         base._Ready();
+
         TargetPosition = GlobalPosition;
         LastSignaledPos = GlobalPosition;
+
         _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
         _sprite2D = GetNode<Sprite2D>("Sprite2D");
-        GD.Print($"Gp {GlobalPosition}");
-        GD.Print($"Tp {TargetPosition}");
     }
 
     public override void _Process(double delta)
     {
         base._Process(delta);
+
         ProcessMovement();
     }
 
@@ -73,14 +77,16 @@ public partial class Unit : CharacterBody2D
 
             Velocity = Vector2.Zero;
             _animationPlayer.Play("Idle");
-
         }
         else
         {
-            Vector2 direction = GlobalPosition.DirectionTo(TargetPosition);
-            Vector2 avoidanceDir = GameMath.CalculateAvoidance(_avoidanceArea, this);
- 
-           // Velocity = direction * speedThisFrame;
+            var direction = GlobalPosition.DirectionTo(TargetPosition);
+            //var avoidance = GameMath.CalculateAvoidance(_avoidanceArea, this);
+            var speedInThisFrame = GameMath.CalculateSpeedInThisFrame
+            (_maxSpeed, _minSpeed, distanceTo, _arrivalDistance);
+            //Vector2 combinedDirection = (direction + avoidance * Stats.AvoidanceWeight).Normalized();
+
+            Velocity = direction * speedInThisFrame;
             MoveAndSlide();
 
             _animationPlayer.Play("Run");

@@ -98,15 +98,17 @@ _data = {
 }
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0p4e8"]
-radius = 22.499998
-height = 64.99999
+radius = 27.499998
+height = 84.99999
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7dlj6"]
-radius = 67.49999
+radius = 52.499996
 
 [node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_avoidanceArea")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
+collision_mask = 0
+motion_mode = 1
 script = ExtResource("1_6cisj")
 Stats = ExtResource("2_cg44j")
 _minSpeed = 100.0
@@ -124,7 +126,7 @@ hframes = 8
 libraries/ = SubResource("AnimationLibrary_t7o5p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
-position = Vector2(1.4210855e-14, -22.499998)
+position = Vector2(-2.4999998, -29.999996)
 shape = SubResource("CapsuleShape2D_0p4e8")
 
 [node name="Area2D" type="Area2D" parent="." unique_id=1804330532]

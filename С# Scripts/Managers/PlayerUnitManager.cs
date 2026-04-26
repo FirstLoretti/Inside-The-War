@@ -1,9 +1,9 @@
 using Godot;
-using InsideTheWar.Singletons;
 using System.Linq;
 using InsideTheWar.Entities;
 using InsideTheWar.Helpers;
 using System.Collections.Generic;
+using System.Data;
 
 namespace InsideTheWar.Managers;
 
@@ -60,6 +60,7 @@ public partial class PlayerUnitManager : Node
         //Vector2I targetCell = _gridManager.TargetCell(mousePosition);
         //_gridManager.ClearCellOccupation(leader.SquadId);
         //_gridManager.UpdateOccupation(leader);
+        /*
         var squadDirection = (mousePosition - squadCenter).Normalized();
         var rotationAngle = squadDirection.Angle();
         foreach (var unit in selectedUnits)
@@ -71,7 +72,12 @@ public partial class PlayerUnitManager : Node
 
             unit.TargetPosition = mousePosition + rotatedOffset;
         }
+        */
+        GameMath.AssignUnitsToPointsAlgorithm(selectedUnits, mousePosition);
+
     }
+
+    
     /*
     private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
     {
