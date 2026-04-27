@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://ccg4bq4knux3c"]
 
+[ext_resource type="Script" uid="uid://duo7xx32a3pft" path="res://С# Scripts/Entities/AIUnit.cs" id="1_uk2px"]
 [ext_resource type="Texture2D" uid="uid://gl12dh5nenv6" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Run.png" id="2_nu1rs"]
+[ext_resource type="Resource" uid="uid://cnd6j0fk5c42k" path="res://С# Scripts/Data/FrenchKnight.tres" id="2_rxecv"]
 [ext_resource type="Texture2D" uid="uid://syjmcj3v0xeb" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Idle.png" id="3_akxnc"]
 
 [sub_resource type="Animation" id="Animation_m2147"]
@@ -99,19 +101,32 @@ _data = {
 radius = 34.0
 height = 92.0
 
-[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046]
+[sub_resource type="CircleShape2D" id="CircleShape2D_uk2px"]
+radius = 52.499996
+
+[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_avoidanceArea", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
+script = ExtResource("1_uk2px")
+Stats = ExtResource("2_rxecv")
+_avoidanceArea = NodePath("Area2D")
+_animationPlayer = NodePath("AnimationPlayer")
+_sprite2D = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
-position = Vector2(1, 1)
-texture = ExtResource("2_nu1rs")
-hframes = 6
-frame = 1
+position = Vector2(1, -21.499998)
+texture = ExtResource("3_akxnc")
+hframes = 8
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=836985193]
 libraries/ = SubResource("AnimationLibrary_t7o5p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
-position = Vector2(-1, -5)
+position = Vector2(-1, -27.499998)
 shape = SubResource("CapsuleShape2D_7kaga")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1612358133]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=340026131]
+position = Vector2(0, -27.499998)
+shape = SubResource("CircleShape2D_uk2px")

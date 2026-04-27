@@ -7,6 +7,15 @@ namespace InsideTheWar.Helpers;
 
 public static class GameMath
 {
+    private static readonly RandomNumberGenerator _rng = new();
+
+    static GameMath()
+    {
+        _rng.Randomize();
+    }
+
+    public static float GetRandomNumber(float number1, float number2) => _rng.RandfRange(number1, number2);
+
     public static Vector2 CalculateSquadOffset
     (int col, int row, int totalColls, int totalRows, int spacing)
     {
@@ -97,7 +106,7 @@ public static class GameMath
         return points;
     }
 
-    public static void AssignUnitsToPointsAlgorithm(IReadOnlyList<PlayerUnit> units, Vector2 mousePosition)
+    public static void AssignUnitsToPointsAlgorithm(IReadOnlyList<IUnit> units, Vector2 mousePosition)
     {
         var points = GenerateTargetPoints
         (mousePosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
@@ -119,11 +128,8 @@ public static class GameMath
 
     public static Vector2 GetRandomPointInCircle(Vector2 center, float minRadius, float maxRadius)
     {
-        RandomNumberGenerator rng = new();
-        rng.Randomize();
-
-        var randomRadius = rng.RandfRange(minRadius, maxRadius);
-        var randomDirection = rng.RandfRange(0, Mathf.Tau);
+        var randomRadius = GetRandomNumber(minRadius, maxRadius);
+        var randomDirection = GetRandomNumber(0, Mathf.Tau);
         var offset = new Vector2(Mathf.Sin(randomDirection), Mathf.Cos(randomDirection)) * randomRadius;
 
         return center + offset;

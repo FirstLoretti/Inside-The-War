@@ -13,9 +13,9 @@ public partial class SpawnManager : Node
     [Export] public PackedScene UnitEngland { get; private set; }
     [Export] public PackedScene UnitFrance { get; private set; }
 
-    [ExportGroup("EntityContainer")]
+    [ExportGroup("EntityContainers")]
     [Export] private Node2D _playerUnits;
-    [Export] private Node2D _enemyUnits;
+    [Export] private Node2D _aiUnits;
 
     private int _lastSquadId = 0;
     private Dictionary<String, Node2D> _containers;
@@ -26,8 +26,8 @@ public partial class SpawnManager : Node
 
         _containers = new()
         {
-            {"PlayerUnits", _playerUnits},
-            {"EnemyUnits", _enemyUnits}
+            {"Player", _playerUnits},
+            {"AI", _aiUnits}
         };
 
     }
@@ -39,7 +39,7 @@ public partial class SpawnManager : Node
 
         int rows, cols, spacing, vision;
 
-        using (var dobby = unit.Instantiate<PlayerUnit>())
+        using (var dobby = unit.Instantiate<Unit>())
         {
             rows = dobby.FormationRows;
             cols = dobby.FormationCols;

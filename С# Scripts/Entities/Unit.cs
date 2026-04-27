@@ -5,17 +5,15 @@ using InsideTheWar.Data;
 
 namespace InsideTheWar.Entities;
 
-public partial class Unit : CharacterBody2D
+public partial class Unit : CharacterBody2D, IUnit
 {
     [ExportGroup("Status")]
-    [Export] public UnitStates CurrentState { get; protected set;} = UnitStates.Idle;
+    [Export] public UnitStates CurrentState { get; protected set; } = UnitStates.Idle;
 
     [ExportGroup("Stats")]
     [Export] public BaseUnitData Stats { get; private set; }
-    [Export] protected float _maxSpeed = 150.0f;
-    [Export] protected float _minSpeed = 75.0f;
-    [Export] protected int _visionRadius = 1;
-    public int VisionRadius => _visionRadius;
+
+    public int VisionRadius => Stats.Vision;
 
     [ExportGroup("FormationSettings")]
     [Export] protected int _formationCols = 3;
@@ -28,11 +26,12 @@ public partial class Unit : CharacterBody2D
     [ExportGroup("Technical")]
     [Export] protected float _stoppingDistance = 5.0f;
     [Export] protected float _arrivalDistance = 50.0f;
-    [Export] private float _updateSignalsTreshold = 32.0f;
-    [Export] private Area2D _avoidanceArea;
+    [Export] protected float _updateSignalsTreshold = 32.0f;
 
-    private AnimationPlayer _animationPlayer;
-    private Sprite2D _sprite2D;
+    [ExportGroup("Dependencies")]
+    [Export] protected Area2D _avoidanceArea;
+    [Export] protected AnimationPlayer _animationPlayer;
+    [Export] protected Sprite2D _sprite2D;
 
     public Vector2 TargetPosition { get; set; }
     public Vector2 LastSignaledPos { get; set; }
@@ -42,6 +41,9 @@ public partial class Unit : CharacterBody2D
 
     public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
 
+    protected static readonly StringName RunAnim = "Run";
+    protected static readonly StringName IdleAnim = "Idle";
+
     public override void _Ready()
     {
         base._Ready();
@@ -49,19 +51,19 @@ public partial class Unit : CharacterBody2D
         TargetPosition = GlobalPosition;
         LastSignaledPos = GlobalPosition;
 
-        _animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
-        _sprite2D = GetNode<Sprite2D>("Sprite2D");
+        _animationPlayer.Play(IdleAnim);
     }
 
     public override void _Process(double delta)
     {
         base._Process(delta);
 
-        ProcessMovement();
+        ProcessMovement((float)delta);
     }
 
-    private void ProcessMovement()
+    protected virtual void ProcessMovement(float delta)
     {
+
         float distanceTo = GlobalPosition.DistanceTo(TargetPosition);
 
         if (distanceTo <= _stoppingDistance)
@@ -72,24 +74,28 @@ public partial class Unit : CharacterBody2D
             {
                 GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
                 GetInstanceId(), LastSignaledPos, GlobalPosition, VisionRadius);
+
                 LastSignaledPos = GlobalPosition;
             }
 
             Velocity = Vector2.Zero;
-            _animationPlayer.Play("Idle");
+            CurrentState = UnitStates.Idle;
+            _animationPlayer.Play(IdleAnim);
         }
         else
         {
             var direction = GlobalPosition.DirectionTo(TargetPosition);
-            //var avoidance = GameMath.CalculateAvoidance(_avoidanceArea, this);
             var speedInThisFrame = GameMath.CalculateSpeedInThisFrame
-            (_maxSpeed, _minSpeed, distanceTo, _arrivalDistance);
+            (Stats.MaxSpeed, Stats.MinSpeed, distanceTo, _arrivalDistance);
+
+            //var avoidance = GameMath.CalculateAvoidance(_avoidanceArea, this);
             //Vector2 combinedDirection = (direction + avoidance * Stats.AvoidanceWeight).Normalized();
 
             Velocity = direction * speedInThisFrame;
             MoveAndSlide();
 
-            _animationPlayer.Play("Run");
+            CurrentState = UnitStates.Moving;
+            _animationPlayer.Play(RunAnim);
             _sprite2D.FlipH = direction.X < 0.0f;
 
             CheckFogUpdate();

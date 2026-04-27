@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="AIUnitData" format=3 uid="uid://cnd6j0fk5c42k"]
+
+[ext_resource type="Script" uid="uid://cf232xvbetwux" path="res://С# Scripts/Data/AIUnitData.cs" id="1_egk1v"]
+
+[resource]
+script = ExtResource("1_egk1v")
+metadata/_custom_type_script = "uid://cf232xvbetwux"

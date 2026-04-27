@@ -2,8 +2,6 @@ using Godot;
 using System.Linq;
 using InsideTheWar.Entities;
 using InsideTheWar.Helpers;
-using System.Collections.Generic;
-using System.Data;
 
 namespace InsideTheWar.Managers;
 

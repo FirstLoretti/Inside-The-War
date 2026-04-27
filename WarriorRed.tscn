@@ -104,18 +104,19 @@ height = 84.99999
 [sub_resource type="CircleShape2D" id="CircleShape2D_7dlj6"]
 radius = 52.499996
 
-[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_avoidanceArea")]
+[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_avoidanceArea", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_6cisj")
 Stats = ExtResource("2_cg44j")
-_minSpeed = 100.0
 _formationSpacing = 30
 _stoppingDistance = 3.0
 _arrivalDistance = 200.0
 _avoidanceArea = NodePath("Area2D")
+_animationPlayer = NodePath("AnimationPlayer")
+_sprite2D = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
 position = Vector2(5.9604645e-08, -24.999996)
