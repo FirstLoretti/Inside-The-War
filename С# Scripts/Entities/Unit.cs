@@ -8,7 +8,7 @@ namespace InsideTheWar.Entities;
 public partial class Unit : CharacterBody2D, IUnit
 {
     [ExportGroup("Status")]
-    [Export] public UnitStates CurrentState { get; protected set; } = UnitStates.Idle;
+    [Export] public UnitStates CurrentState { get; set; } = UnitStates.Idle;
 
     [ExportGroup("Stats")]
     [Export] public BaseUnitData Stats { get; private set; }
@@ -38,6 +38,8 @@ public partial class Unit : CharacterBody2D, IUnit
     public int SquadId { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
+    public ulong Id {get; set;}
+    public bool isLeader = false;
 
     public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
 
@@ -50,6 +52,7 @@ public partial class Unit : CharacterBody2D, IUnit
 
         TargetPosition = GlobalPosition;
         LastSignaledPos = GlobalPosition;
+        Id = GetInstanceId();
 
         _animationPlayer.Play(IdleAnim);
     }

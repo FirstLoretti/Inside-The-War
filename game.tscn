@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://ch5qiojgmncbs" path="res://С# Scripts/Managers/GridManager.cs" id="5_yx171"]
 [ext_resource type="Script" uid="uid://27pwpqx7cc72" path="res://С# Scripts/Managers/PlayerUnitManager.cs" id="6_yhmtn"]
 [ext_resource type="Script" uid="uid://do3dnvx1ujoho" path="res://С# Scripts/Managers/SpawnManager.cs" id="7_gwjdr"]
+[ext_resource type="Script" uid="uid://dshoy8gsivuyk" path="res://С# Scripts/Managers/AIUnitManager.cs" id="8_gwjdr"]
 [ext_resource type="Script" uid="uid://cjlrogr4qu7rw" path="res://С# Scripts/Managers/SelectionManager.cs" id="8_lvtmh"]
 [ext_resource type="PackedScene" uid="uid://dywccmq1yve7e" path="res://WarriorRed.tscn" id="9_cpsxm"]
 [ext_resource type="PackedScene" uid="uid://ccg4bq4knux3c" path="res://WarriorBlue.tscn" id="10_hmewc"]
@@ -133,17 +134,15 @@ _minSquadMoveDistance = 60.0
 _gridManager = NodePath("../GridManager")
 _selectionManager = NodePath("../SelectionManager")
 
-[node name="EnemyUnitManager" type="Node" parent="Managers" unique_id=871301421]
+[node name="AIUnitManager" type="Node" parent="Managers" unique_id=871301421]
+script = ExtResource("8_gwjdr")
 
-[node name="Timer" type="Timer" parent="Managers/EnemyUnitManager" unique_id=1505183881]
-autostart = true
-
-[node name="SpawnManager" type="Node" parent="Managers" unique_id=1145693780 node_paths=PackedStringArray("_playerUnits", "_enemyUnits")]
+[node name="SpawnManager" type="Node" parent="Managers" unique_id=1145693780 node_paths=PackedStringArray("_playerUnits", "_aiUnits")]
 script = ExtResource("7_gwjdr")
 UnitEngland = ExtResource("9_cpsxm")
 UnitFrance = ExtResource("10_hmewc")
 _playerUnits = NodePath("../../PlayerUnits")
-_enemyUnits = NodePath("../../EnemyUnits")
+_aiUnits = NodePath("../../AIUnits")
 
 [node name="SelectionManager" type="Node" parent="Managers" unique_id=2015783941 node_paths=PackedStringArray("_playerUnitsContainer")]
 script = ExtResource("8_lvtmh")
@@ -151,4 +150,4 @@ _playerUnitsContainer = NodePath("../../PlayerUnits")
 
 [node name="PlayerUnits" type="Node2D" parent="." unique_id=1017900366]
 
-[node name="EnemyUnits" type="Node2D" parent="." unique_id=661348590]
+[node name="AIUnits" type="Node2D" parent="." unique_id=661348590]

@@ -26,7 +26,7 @@ public partial class PlayerInputHandler : Node2D
                 }
                 else if (Input.IsKeyPressed(Key.Ctrl))
                 {
-                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "Enemy");
+                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "AI");
                 }
                 else
                 {

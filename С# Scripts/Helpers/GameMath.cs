@@ -106,10 +106,12 @@ public static class GameMath
         return points;
     }
 
-    public static void AssignUnitsToPointsAlgorithm(IReadOnlyList<IUnit> units, Vector2 mousePosition)
+    public static Dictionary<IUnit, Vector2> AssignUnitsToPointsAlgorithm(IReadOnlyList<IUnit> units, Vector2 squadTargetPosition)
     {
+        Dictionary<IUnit, Vector2> assignments = new();
+
         var points = GenerateTargetPoints
-        (mousePosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
+        (squadTargetPosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
 
         var sortedUnits = units
         .OrderBy(u => u.GlobalPosition.X)
@@ -122,8 +124,10 @@ public static class GameMath
 
         for (int i = 0; i < sortedUnits.Count; i++)
         {
-            sortedUnits[i].TargetPosition = sortedPoints[i];
+            assignments.Add(sortedUnits[i], sortedPoints[i]);
         }
+
+        return assignments;
     }
 
     public static Vector2 GetRandomPointInCircle(Vector2 center, float minRadius, float maxRadius)

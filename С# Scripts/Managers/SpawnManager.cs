@@ -26,8 +26,8 @@ public partial class SpawnManager : Node
 
         _containers = new()
         {
-            {"Player", _playerUnits},
-            {"AI", _aiUnits}
+            {"PlayerUnits", _playerUnits},
+            {"AIUnits", _aiUnits}
         };
 
     }
@@ -67,13 +67,18 @@ public partial class SpawnManager : Node
 
                 parentNode.AddChild(newUnit);
 
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EnitySpawned, newUnit.GetInstanceId(), newUnit.GlobalPosition);
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
+                GlobalSignals.Instance.EmitSignal
+                (GlobalSignals.SignalName.EntitySpawned,
+                newUnit.GetInstanceId(), newUnit.GlobalPosition);
+
+                GlobalSignals.Instance.EmitSignal
+                (GlobalSignals.SignalName.EntityMoved,
                 newUnit.GetInstanceId(), newUnit.LastSignaledPos, newUnit.GlobalPosition, newUnit.VisionRadius);
 
                 if (leader == null)
                 {
                     leader = newUnit;
+                    newUnit.isLeader = true;
                 }
             }
         }

@@ -29,7 +29,7 @@ public partial class LevelController : Node
         {
             _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, team);
         }
-        else if(team == "Enemy")
+        else if(team == "AI")
         {
             _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, team);
         }

@@ -24,7 +24,7 @@ public partial class GridManager : Node2D
     {
         base._Ready();
 
-        GlobalSignals.Instance.EnitySpawned += OnEntitySpawned;
+        GlobalSignals.Instance.EntitySpawned += OnEntitySpawned;
         GlobalSignals.Instance.EntityMoved += OnEntityMoved;
     }
 
@@ -106,7 +106,7 @@ public partial class GridManager : Node2D
     {
         base._ExitTree();
 
-        GlobalSignals.Instance.EnitySpawned -= OnEntitySpawned;
+        GlobalSignals.Instance.EntitySpawned -= OnEntitySpawned;
         GlobalSignals.Instance.EntityMoved -= OnEntityMoved;
     }
 
