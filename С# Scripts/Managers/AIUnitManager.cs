@@ -1,5 +1,4 @@
 using Godot;
-using InsideTheWar.Helpers;
 using InsideTheWar.Singletons;
 using System.Collections.Generic;
 
@@ -7,53 +6,33 @@ namespace InsideTheWar.Entities;
 
 public partial class AIUnitManager : Node
 {
-    private Dictionary<int, List<AIUnit>> Units = new();
+    private Dictionary<int, AISquad> SquadsById = new();
 
     public override void _Ready()
     {
         base._Ready();
 
         GlobalSignals.Instance.EntitySpawned += OnUnitSpawn;
-        GlobalSignals.Instance.AIUnitReady += OnUnitReady;
     }
 
+    // Создание отряда и назначение юнита в отряд
     private void OnUnitSpawn(ulong id, Vector2 currentPosition)
     {
         var obj = InstanceFromId(id);
 
         if (obj is AIUnit unit)
         {
-            if (!Units.ContainsKey(unit.SquadId))
+            if (!SquadsById.ContainsKey(unit.SquadId))
             {
-                Units[unit.SquadId] = new List<AIUnit>();
+                SquadsById[unit.SquadId] = new AISquad();
             }
 
-            Units[unit.SquadId].Add(unit);
-        }
-    }
-
-    protected void OnUnitReady(AIUnit unit)
-    {
-        foreach (var u in Units[unit.SquadId])
-        {
-            if (u.CurrentState != UnitStates.Waiting) { return; }
-        }
-
-        var RandomWaitingTime = GameMath.GetRandomNumber(unit.MinWaitingTime, unit.MaxWaitingTime);
-
-        var squadCenter = GameMath.CalculateSquadCenter(Units[unit.SquadId]);
-
-        var squadTargetPosition = GameMath.GetRandomPointInCircle
-        (squadCenter, unit.MovementRadiusMin, unit.MovementRadiusMax);
-
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units[unit.SquadId], squadTargetPosition);
-
-        foreach (var pair in assigments)
-        {
-            var u = pair.Key;
-            var point = pair.Value;
-
-            ((AIUnit)u).MoveTo(point, RandomWaitingTime);
+            var currentSquad = SquadsById[unit.SquadId];
+            currentSquad.Units.Add(unit);
+            
+            //! Отписаться!
+            unit.ReadyToAct += currentSquad.OnUnitReady;
+            unit.EnemySpotted += currentSquad.OnEnemySpotted;
         }
     }
 
@@ -62,7 +41,6 @@ public partial class AIUnitManager : Node
         base._ExitTree();
 
         GlobalSignals.Instance.EntitySpawned -= OnUnitSpawn;
-        GlobalSignals.Instance.AIUnitReady -= OnUnitReady;
     }
 
 }

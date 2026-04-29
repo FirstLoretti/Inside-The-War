@@ -8,12 +8,14 @@ namespace InsideTheWar.Entities;
 public partial class Unit : CharacterBody2D, IUnit
 {
     [ExportGroup("Status")]
-    [Export] public UnitStates CurrentState { get; set; } = UnitStates.Idle;
+    [Export] public UnitStates CurrentState = UnitStates.Idle;
 
     [ExportGroup("Stats")]
-    [Export] public BaseUnitData Stats { get; private set; }
-
-    public int VisionRadius => Stats.Vision;
+    [Export] protected BaseUnitData _stats;
+    //[Export] protected Area2D _attackDistanceArea;
+    [Export] protected Area2D _visionArea;
+    public BaseUnitData Stats => _stats;
+    public int VisionRadius => _stats.Vision;
 
     [ExportGroup("FormationSettings")]
     [Export] protected int _formationCols = 3;
@@ -38,8 +40,7 @@ public partial class Unit : CharacterBody2D, IUnit
     public int SquadId { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
-    public ulong Id {get; set;}
-    public bool isLeader = false;
+    public ulong Id { get; set; }
 
     public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
 

@@ -71,11 +71,19 @@ public partial class PlayerUnitManager : Node
             unit.TargetPosition = mousePosition + rotatedOffset;
         }
         */
-        GameMath.AssignUnitsToPointsAlgorithm(selectedUnits, mousePosition);
+        var assigments = GameMath.AssignUnitsToPointsAlgorithm(selectedUnits, mousePosition);
+
+        foreach (var pair in assigments)
+        {
+            var unit = pair.Key as PlayerUnit;
+            var point = pair.Value;
+
+            unit.MoveTo(point);
+        }
 
     }
 
-    
+
     /*
     private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
     {

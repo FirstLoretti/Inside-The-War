@@ -1,14 +1,17 @@
 using Godot;
 using InsideTheWar.Data;
 using InsideTheWar.Helpers;
-using InsideTheWar.Singletons;
+using System;
 
 namespace InsideTheWar.Entities;
 
 public partial class AIUnit : Unit
 {
+    [Export] private float _checkEnemiesInVisionTimer = 0.25f;
     [Export] private float _movementRadiusMin = 50.0f;
     [Export] private float _movementRadiusMax = 200.0f;
+
+    private float _currentCheckTimer;
 
     public float MovementRadiusMin => _movementRadiusMin;
     public float MovementRadiusMax => _movementRadiusMax;
@@ -16,6 +19,11 @@ public partial class AIUnit : Unit
     public float MinWaitingTime { get; private set; }
     public float MaxWaitingTime { get; private set; }
     public float RandomWaitingTime { get; set; }
+
+    public AISquad MySquad { get; set; }
+
+    public event Action<AIUnit> ReadyToAct;
+    public event Action<Node2D> EnemySpotted;
 
     private AIUnitData AIStats => (AIUnitData)Stats;
 
@@ -25,10 +33,19 @@ public partial class AIUnit : Unit
 
         MinWaitingTime = AIStats.MinWaitingTime;
         MaxWaitingTime = AIStats.MaxWaitingTime;
-    }
 
+        _currentCheckTimer = _checkEnemiesInVisionTimer;
+    }
+    //! Зарефакторить
     protected override void ProcessMovement(float delta)
     {
+        _currentCheckTimer -= delta;
+        if (_currentCheckTimer <= 0.0f)
+        {
+            CheckForEnemies();
+            _currentCheckTimer = _checkEnemiesInVisionTimer;
+        }
+
         if (CurrentState == UnitStates.Waiting) { return; }
 
         if (CurrentState == UnitStates.Idle)
@@ -38,8 +55,7 @@ public partial class AIUnit : Unit
             if (RandomWaitingTime <= 0.0f)
             {
                 CurrentState = UnitStates.Waiting;
-
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.AIUnitReady, this);
+                ReadyToAct?.Invoke(this);
             }
 
             return;
@@ -60,7 +76,7 @@ public partial class AIUnit : Unit
         {
             var direction = GlobalPosition.DirectionTo(TargetPosition);
             var speedInThisFrame = GameMath.CalculateSpeedInThisFrame
-            (Stats.MaxSpeed, Stats.MinSpeed, distanceTo, _arrivalDistance);
+            (_stats.MaxSpeed, _stats.MinSpeed, distanceTo, _arrivalDistance);
 
             //var avoidance = GameMath.CalculateAvoidance(_avoidanceArea, this);
             //Vector2 combinedDirection = (direction + avoidance * Stats.AvoidanceWeight).Normalized();
@@ -80,4 +96,22 @@ public partial class AIUnit : Unit
         CurrentState = UnitStates.Moving;
         _animationPlayer.Play(RunAnim);
     }
+
+    private void CheckForEnemies()
+    {
+        var overlappingAreas = _visionArea.GetOverlappingAreas();
+
+        foreach (var area in overlappingAreas)
+        {   
+            Node2D entity = (Node2D)area.GetParent();
+
+            if (entity.IsInGroup("PlayerUnits"))
+            {
+                EnemySpotted?.Invoke(entity);
+            }
+
+            break;
+        }
+    }
+
 }

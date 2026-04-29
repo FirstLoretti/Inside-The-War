@@ -11,8 +11,8 @@ public partial class GlobalSignals : Node
     public delegate void EntityMovedEventHandler(ulong id, Vector2 oldPosition, Vector2 currentPosition, int vision);
     [Signal]
     public delegate void EntitySpawnedEventHandler(ulong id, Vector2 currentPosition);
-    [Signal]
-    public delegate void AIUnitReadyEventHandler(AIUnit unit);
+    //[Signal]
+    //public delegate void AIUnitReadyEventHandler(AIUnit unit);
     [Signal]
     public delegate void RequestSpawnEventHandler(Vector2 mousPosition, string team);
 

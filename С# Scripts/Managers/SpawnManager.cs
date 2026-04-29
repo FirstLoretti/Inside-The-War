@@ -32,10 +32,12 @@ public partial class SpawnManager : Node
 
     }
 
-    public int SpawnSquad(Vector2 spawnPos, PackedScene unit, string team)
+    public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, string team)
     {
         _lastSquadId += 1;
         var currentSquadId = _lastSquadId;
+
+        var parentNode = _containers[team + "Units"];
 
         int rows, cols, spacing, vision;
 
@@ -47,9 +49,6 @@ public partial class SpawnManager : Node
             vision = dobby.VisionRadius;
         }
 
-        var parentNode = _containers[team + "Units"];
-        Unit leader = null;
-
         for (int row = 0; row < rows; row++)
         {
             for (int col = 0; col < cols; col++)
@@ -60,26 +59,22 @@ public partial class SpawnManager : Node
                 newUnit.SquadId = currentSquadId;
                 newUnit.AddToGroup(team + "Units");
 
-                var offset = GameMath.CalculateSquadOffset(col, row,
-                newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
-
-                newUnit.GlobalPosition = spawnPos + offset;
+                var offset = GameMath.CalculateSquadOffset(col, row, newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
+                newUnit.GlobalPosition = spawnPosition + offset;
 
                 parentNode.AddChild(newUnit);
 
-                GlobalSignals.Instance.EmitSignal
-                (GlobalSignals.SignalName.EntitySpawned,
-                newUnit.GetInstanceId(), newUnit.GlobalPosition);
+                GlobalSignals.Instance.EmitSignal(
+                    GlobalSignals.SignalName.EntitySpawned,
+                    newUnit.GetInstanceId(),
+                    newUnit.GlobalPosition);
 
-                GlobalSignals.Instance.EmitSignal
-                (GlobalSignals.SignalName.EntityMoved,
-                newUnit.GetInstanceId(), newUnit.LastSignaledPos, newUnit.GlobalPosition, newUnit.VisionRadius);
-
-                if (leader == null)
-                {
-                    leader = newUnit;
-                    newUnit.isLeader = true;
-                }
+                GlobalSignals.Instance.EmitSignal(
+                    GlobalSignals.SignalName.EntityMoved,
+                    newUnit.GetInstanceId(),
+                    newUnit.LastSignaledPos,
+                    newUnit.GlobalPosition,
+                    newUnit.VisionRadius);
             }
         }
 

@@ -16,11 +16,10 @@ public static class GameMath
 
     public static float GetRandomNumber(float number1, float number2) => _rng.RandfRange(number1, number2);
 
-    public static Vector2 CalculateSquadOffset
-    (int col, int row, int totalColls, int totalRows, int spacing)
+    public static Vector2 CalculateSquadOffset(int col, int row, int formationCols, int formationRows, int spacing)
     {
-        float offsetX = (col - (totalColls - 1.0f) / 2.0f) * spacing;
-        float offsetY = (row - (totalRows - 1.0f) / 2.0f) * spacing;
+        float offsetX = (col - (formationCols - 1.0f) / 2.0f) * spacing;
+        float offsetY = (row - (formationRows - 1.0f) / 2.0f) * spacing;
 
         return new Vector2(offsetX, offsetY);
     }
@@ -72,8 +71,7 @@ public static class GameMath
         return avoidanceVector;
     }
 
-    public static float CalculateSpeedInThisFrame
-    (float maxSpeed, float minSpeed, float distanceTo, float arrivalDistance)
+    public static float CalculateSpeedInThisFrame(float maxSpeed, float minSpeed, float distanceTo, float arrivalDistance)
     {
         var speedInThisFrame = maxSpeed;
 
@@ -86,19 +84,18 @@ public static class GameMath
 
         return speedInThisFrame;
     }
-
-    public static List<Vector2> GenerateTargetPoints
-    (Vector2 mousePos, int count, int unitFormationCols, int unitFormationRows, int unitFormationSpacing)
+    //! Объединение с CalculateSquadOffset, создание Debug
+    public static List<Vector2> GenerateTargetPoints(Vector2 mousePos, int count, int FormationCols, int FormationRows, int FormationSpacing)
     {
         List<Vector2> points = new();
 
         for (int i = 0; i < count; i++)
         {
-            int col = i % unitFormationCols;
-            int row = i / unitFormationCols;
+            int col = i % FormationCols;
+            int row = i / FormationCols;
 
             var offset = CalculateSquadOffset
-            (col, row, unitFormationCols, unitFormationRows, unitFormationSpacing);
+            (col, row, FormationCols, FormationRows, FormationSpacing);
 
             points.Add(mousePos + offset);
         }
@@ -110,8 +107,7 @@ public static class GameMath
     {
         Dictionary<IUnit, Vector2> assignments = new();
 
-        var points = GenerateTargetPoints
-        (squadTargetPosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
+        var points = GenerateTargetPoints(squadTargetPosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
 
         var sortedUnits = units
         .OrderBy(u => u.GlobalPosition.X)
