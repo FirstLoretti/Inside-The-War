@@ -8,14 +8,13 @@ namespace InsideTheWar.Entities;
 public partial class Unit : CharacterBody2D, IUnit
 {
     [ExportGroup("Status")]
-    [Export] public UnitStates CurrentState = UnitStates.Idle;
+    [Export] public UnitStates CurrentState = UnitStates.WaitingOrder;
 
     [ExportGroup("Stats")]
     [Export] protected BaseUnitData _stats;
-    //[Export] protected Area2D _attackDistanceArea;
-    [Export] protected Area2D _visionArea;
+    [Export] protected Area2D _visionArea; //! Оптимизировать
+    [Export] protected Area2D _attackDistanceArea;
     public BaseUnitData Stats => _stats;
-    public int VisionRadius => _stats.Vision;
 
     [ExportGroup("FormationSettings")]
     [Export] protected int _formationCols = 3;
@@ -77,7 +76,7 @@ public partial class Unit : CharacterBody2D, IUnit
             if (GlobalPosition != LastSignaledPos)
             {
                 GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-                GetInstanceId(), LastSignaledPos, GlobalPosition, VisionRadius);
+                GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.VisionDistance);
 
                 LastSignaledPos = GlobalPosition;
             }
@@ -111,11 +110,20 @@ public partial class Unit : CharacterBody2D, IUnit
         if (GlobalPosition.DistanceTo(LastSignaledPos) > _updateSignalsTreshold)
         {
             GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-            GetInstanceId(), LastSignaledPos, GlobalPosition, VisionRadius);
+            GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.VisionDistance);
 
             LastSignaledPos = GlobalPosition;
         }
     }
+
+    public override void _Draw()
+    {
+        base._Draw();
+
+        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Red with { A = 0.3f });
+        DrawCircle(Vector2.Zero, Stats.VisionDistance, Colors.Yellow with { A = 0.05f });
+    }
+
 
 }
 

@@ -39,14 +39,15 @@ public partial class SpawnManager : Node
 
         var parentNode = _containers[team + "Units"];
 
-        int rows, cols, spacing, vision;
+        int rows, cols, spacing;
+        float vision;
 
         using (var dobby = unit.Instantiate<Unit>())
         {
             rows = dobby.FormationRows;
             cols = dobby.FormationCols;
             spacing = dobby.FormationSpacing;
-            vision = dobby.VisionRadius;
+            vision = dobby.Stats.VisionDistance;
         }
 
         for (int row = 0; row < rows; row++)
@@ -74,7 +75,7 @@ public partial class SpawnManager : Node
                     newUnit.GetInstanceId(),
                     newUnit.LastSignaledPos,
                     newUnit.GlobalPosition,
-                    newUnit.VisionRadius);
+                    newUnit.Stats.VisionDistance);
             }
         }
 

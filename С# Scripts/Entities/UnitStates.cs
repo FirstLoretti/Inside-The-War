@@ -4,8 +4,9 @@ public enum UnitStates
 {
     Idle,
     Moving,
-    Waiting,
-    Attack,
-    Charge
+    WaitingOrder,
+    Attacking,
+    Charging,
+    BattleReady
 }
 

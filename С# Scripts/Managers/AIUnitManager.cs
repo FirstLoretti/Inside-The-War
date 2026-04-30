@@ -8,6 +8,7 @@ public partial class AIUnitManager : Node
 {
     private Dictionary<int, AISquad> SquadsById = new();
 
+
     public override void _Ready()
     {
         base._Ready();
@@ -24,7 +25,10 @@ public partial class AIUnitManager : Node
         {
             if (!SquadsById.ContainsKey(unit.SquadId))
             {
-                SquadsById[unit.SquadId] = new AISquad();
+                AISquad newSquad = new();
+                SquadsById[unit.SquadId] = newSquad;
+                newSquad.ExpectedUnitsCount = unit.FormationCols * unit.FormationRows;
+
             }
 
             var currentSquad = SquadsById[unit.SquadId];
@@ -33,6 +37,8 @@ public partial class AIUnitManager : Node
             //! Отписаться!
             unit.ReadyToAct += currentSquad.OnUnitReady;
             unit.EnemySpotted += currentSquad.OnEnemySpotted;
+
+            unit.ReportReady();
         }
     }
 

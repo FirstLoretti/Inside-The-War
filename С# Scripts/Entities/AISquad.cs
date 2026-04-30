@@ -7,26 +7,29 @@ namespace InsideTheWar.Entities;
 public partial class AISquad : Node
 {
     public List<AIUnit> Units { get; set; } = new();
-    private Node2D CurrentTarget { get; set; }
+
+    public int ExpectedUnitsCount { get; set; }
+
+    private Node2D _currentTarget;
 
     public void OnEnemySpotted(Node2D enemy)
     {
-        if (CurrentTarget == null)
+        if (_currentTarget == null)
         {
-            CurrentTarget = enemy;
+            _currentTarget = enemy;
 
             foreach (var unit in Units)
             {
-                unit.CurrentState = UnitStates.Waiting;
-            }           
+                unit.CurrentState = UnitStates.WaitingOrder;
+            }
         }
 
-        AttackTarget();
+        ChargeTarget();
     }
 
-    public void AttackTarget()
+    public void ChargeTarget()
     {
-        var attackPosition = CurrentTarget.GlobalPosition;
+        var attackPosition = _currentTarget.GlobalPosition;
 
         var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, attackPosition);
 
@@ -35,18 +38,20 @@ public partial class AISquad : Node
             var unit = pair.Key as AIUnit;
             var target = pair.Value;
 
-            unit.MoveTo(target, 0.0f);
+            unit.Charge(target);
         }
     }
 
     public void OnUnitReady(AIUnit unit)
     {
+        if (Units.Count < ExpectedUnitsCount) { return; } //! Сломается при убийстве
+
         foreach (var u in Units)
         {
-            if (u.CurrentState != UnitStates.Waiting) { return; }
+            if (u.CurrentState != UnitStates.WaitingOrder) { return; }
         }
 
-        var RandomWaitingTime = GameMath.GetRandomNumber(unit.MinWaitingTime, unit.MaxWaitingTime);
+        var RandomWaitingTime = GameMath.GetRandomNumber(unit.MinIdleTime, unit.MaxIdleTime);
 
         var squadCenter = GameMath.CalculateSquadCenter(Units);
         var squadTargetPosition = GameMath.GetRandomPointInCircle(squadCenter, unit.MovementRadiusMin, unit.MovementRadiusMax);
