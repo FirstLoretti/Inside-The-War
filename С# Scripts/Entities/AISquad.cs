@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Helpers;
+using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Entities;
 
@@ -10,33 +11,32 @@ public partial class AISquad : Node
 
     public int ExpectedUnitsCount { get; set; }
 
-    private Node2D _currentTarget;
+    private Unit _currentTarget;
 
     public void OnEnemySpotted(Node2D enemy)
     {
-        if (_currentTarget == null)
+        if (_currentTarget != null || enemy is not Unit enemyUnit) { return; }
         {
-            _currentTarget = enemy;
+            _currentTarget = enemyUnit;
 
-            foreach (var unit in Units)
+            GlobalSignals.Instance.EmitRequestSquadUnits(enemyUnit.SquadId, (enemyUnits) =>
             {
-                unit.CurrentState = UnitStates.WaitingOrder;
-            }
+                var enemyCenter = GameMath.CalculateSquadCenter(enemyUnits);
+                ChargeTarget(enemyCenter);
+            });
         }
-
-        ChargeTarget();
     }
 
-    public void ChargeTarget()
+    public void ChargeTarget(Vector2 targetPosition)
     {
-        var attackPosition = _currentTarget.GlobalPosition;
-
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, attackPosition);
+        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, targetPosition);
 
         foreach (var pair in assigments)
         {
             var unit = pair.Key as AIUnit;
             var target = pair.Value;
+
+            if (unit.CurrentState == UnitStates.Attacking) continue;
 
             unit.Charge(target);
         }

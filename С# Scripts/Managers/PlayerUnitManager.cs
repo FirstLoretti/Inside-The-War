@@ -2,11 +2,16 @@ using Godot;
 using System.Linq;
 using InsideTheWar.Entities;
 using InsideTheWar.Helpers;
+using System.Collections.Generic;
+using InsideTheWar.Singletons;
+using System;
 
 namespace InsideTheWar.Managers;
 
 public partial class PlayerUnitManager : Node
 {
+    private Dictionary<int, PlayerSquad> _squadsById = new();
+
     [ExportGroup("Nodes")]
     [Export] private Node2D _unitsContainer;
 
@@ -23,6 +28,8 @@ public partial class PlayerUnitManager : Node
     {
         base._Ready();
 
+        GlobalSignals.Instance.EntitySpawned += OnUnitSpawn;
+        GlobalSignals.Instance.RequestSquadUnits += OnSquadUnitsRequest;
         //GlobalSignals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
 
     }
@@ -83,7 +90,30 @@ public partial class PlayerUnitManager : Node
 
     }
 
+    private void OnUnitSpawn(ulong id, Vector2 currentPosition)
+    {
+        var obj = InstanceFromId(id);
 
+        if (obj is PlayerUnit unit)
+        {
+            if (!_squadsById.ContainsKey(unit.SquadId))
+            {
+                PlayerSquad newSquad = new();
+                _squadsById[unit.SquadId] = newSquad;
+            }
+
+            var currentSquad = _squadsById[unit.SquadId];
+            currentSquad.Units.Add(unit);
+        }
+    }
+
+    private void OnSquadUnitsRequest(int squadId, Action<List<Unit>> callback)
+    {
+        if (_squadsById.ContainsKey(squadId))
+        {
+            callback?.Invoke(_squadsById[squadId].Units);
+        }
+    }
     /*
     private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
     {
@@ -94,12 +124,14 @@ public partial class PlayerUnitManager : Node
             (GlobalSignals.SignalName.EntityMoved, squadId, targetCell, vision);
         }
     }
-    
+    */
     public override void _ExitTree()
     {
         base._ExitTree();
-        GlobalSignals.Instance.PlayerLeaderPositionChanged -= OnLeaderPositionChanged;
+        GlobalSignals.Instance.EntitySpawned -= OnUnitSpawn;
+        GlobalSignals.Instance.RequestSquadUnits -= OnSquadUnitsRequest;
+        //GlobalSignals.Instance.PlayerLeaderPositionChanged -= OnLeaderPositionChanged;
     }
-    */
+    
 
 }

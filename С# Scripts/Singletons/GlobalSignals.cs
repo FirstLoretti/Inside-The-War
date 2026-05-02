@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Entities;
 
@@ -5,6 +7,11 @@ namespace InsideTheWar.Singletons;
 
 public partial class GlobalSignals : Node
 {
+    public event Action<int, Action<List<Unit>>> RequestSquadUnits;
+    public void EmitRequestSquadUnits(int squadId, Action<List<Unit>> callback)
+    {
+        RequestSquadUnits?.Invoke(squadId, callback);
+    }
     //[Signal]
     //public delegate void PlayerLeaderPositionChangedEventHandler(Vector2 newPosition, int vision, int squadID);
     [Signal]
@@ -21,6 +28,7 @@ public partial class GlobalSignals : Node
     public override void _Ready()
     {
         base._Ready();
+        
         Instance = this;
     }
 

@@ -26,6 +26,8 @@ public partial class GridManager : Node2D
 
         GlobalSignals.Instance.EntitySpawned += OnEntitySpawned;
         GlobalSignals.Instance.EntityMoved += OnEntityMoved;
+
+        AddToGroup("Debuggable");
     }
 
     private void OnEntitySpawned(ulong id, Vector2 currentPos)
@@ -54,7 +56,8 @@ public partial class GridManager : Node2D
 
     public override void _Draw()
     {
-        base._Draw();
+        if (!GlobalDebugManager.IsEnabled) { return; }
+
         DrawGrid();
         DrawOccupationCells();
     }
@@ -77,7 +80,7 @@ public partial class GridManager : Node2D
     {
         int gridWidth = 20;
         int gridHeight = 20;
-        Color color = new Color(1, 1, 1, 0.2f);
+        Color color = new Color(1, 1, 1, 0.25f);
 
         for (int i = 0; i <= gridWidth; i++)
         {
@@ -99,7 +102,7 @@ public partial class GridManager : Node2D
         foreach (var cell in _occupiedCells.Keys)
         {
             var rect = new Rect2(cell * _cellSize, new Vector2(_cellSize, _cellSize));
-            DrawRect(rect, new Color(1, 0, 0, 0.3f));
+            DrawRect(rect, new Color(1, 0, 0, 0.15f));
         }
     }
     public override void _ExitTree()

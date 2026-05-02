@@ -2,18 +2,17 @@ using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Singletons;
 using InsideTheWar.Data;
+using System.Collections.Generic;
 
 namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D, IUnit
 {
-    [ExportGroup("Status")]
-    [Export] public UnitStates CurrentState = UnitStates.WaitingOrder;
-
     [ExportGroup("Stats")]
     [Export] protected BaseUnitData _stats;
     [Export] protected Area2D _visionArea; //! Оптимизировать
     [Export] protected Area2D _attackDistanceArea;
+    public float AttackDistanceRadius { get; private set; }
     public BaseUnitData Stats => _stats;
 
     [ExportGroup("FormationSettings")]
@@ -34,17 +33,21 @@ public partial class Unit : CharacterBody2D, IUnit
     [Export] protected AnimationPlayer _animationPlayer;
     [Export] protected Sprite2D _sprite2D;
 
+    public UnitStates CurrentState { get; protected set; }
+    public List<Unit> UnitsAttackingMe = new();
     public Vector2 TargetPosition { get; set; }
     public Vector2 LastSignaledPos { get; set; }
     public int SquadId { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
     public ulong Id { get; set; }
+    public const int MaxUnitsAttackers = 1;
 
     public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
 
     protected static readonly StringName RunAnim = "Run";
     protected static readonly StringName IdleAnim = "Idle";
+    protected static readonly StringName AttackAnim = "Attack";
 
     public override void _Ready()
     {
@@ -53,6 +56,9 @@ public partial class Unit : CharacterBody2D, IUnit
         TargetPosition = GlobalPosition;
         LastSignaledPos = GlobalPosition;
         Id = GetInstanceId();
+        AttackDistanceRadius = ((CircleShape2D)((_attackDistanceArea.GetChild<CollisionShape2D>(0)).Shape)).Radius;
+        CurrentState = UnitStates.WaitingOrder;
+        AddToGroup("Debuggable"); //! Сделать константу
 
         _animationPlayer.Play(IdleAnim);
     }
@@ -118,10 +124,15 @@ public partial class Unit : CharacterBody2D, IUnit
 
     public override void _Draw()
     {
+        if (!GlobalDebugManager.IsEnabled) { return; }
+
         base._Draw();
 
-        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Red with { A = 0.3f });
-        DrawCircle(Vector2.Zero, Stats.VisionDistance, Colors.Yellow with { A = 0.05f });
+        var lineColor = CurrentState == UnitStates.Moving ? Colors.Green : Colors.Blue;
+
+        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Orange with { A = 0.25f });
+        DrawLine(Vector2.Zero, ToLocal(TargetPosition), lineColor, 4.0f);
+        DrawCircle(Vector2.Zero, Stats.VisionDistance, Colors.Yellow with { A = 0.2f });
     }
 
 

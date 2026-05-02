@@ -4,6 +4,47 @@
 [ext_resource type="Texture2D" uid="uid://gl12dh5nenv6" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Run.png" id="2_nu1rs"]
 [ext_resource type="Resource" uid="uid://cnd6j0fk5c42k" path="res://С# Scripts/Data/FrenchKnight.tres" id="2_rxecv"]
 [ext_resource type="Texture2D" uid="uid://syjmcj3v0xeb" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Idle.png" id="3_akxnc"]
+[ext_resource type="Texture2D" uid="uid://bb45yjd7bk2qh" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Attack1.png" id="3_rxecv"]
+
+[sub_resource type="Animation" id="Animation_1tjhy"]
+resource_name = "Attack"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("3_rxecv")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.033333335, 0.06666667, 0.10000001, 0.13333334),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 3]
+}
 
 [sub_resource type="Animation" id="Animation_m2147"]
 resource_name = "Idle"
@@ -48,6 +89,42 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_61x85"]
 length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("3_rxecv")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:hframes")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [4]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Sprite2D:frame")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
 
 [sub_resource type="Animation" id="Animation_t7o5p"]
 resource_name = "Run"
@@ -92,6 +169,7 @@ tracks/2/keys = {
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_t7o5p"]
 _data = {
+&"Attack": SubResource("Animation_1tjhy"),
 &"Idle": SubResource("Animation_m2147"),
 &"RESET": SubResource("Animation_61x85"),
 &"Run": SubResource("Animation_t7o5p")
@@ -117,18 +195,21 @@ collision_layer = 2
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_uk2px")
-_checkEnemiesInVisionTimer = 1.0
+_checkEnemiesInVisionTimer = 0.1
 _stats = ExtResource("2_rxecv")
 _visionArea = NodePath("VisionArea2D")
 _attackDistanceArea = NodePath("AttackArea2D")
+_formationCols = 4
+_formationRows = 4
+_formationSpacing = 60
 _avoidanceArea = NodePath("AvoidanceArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=987311330]
 position = Vector2(1, -21.499998)
-texture = ExtResource("3_akxnc")
-hframes = 8
+texture = ExtResource("3_rxecv")
+hframes = 4
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=836985193]
 libraries/ = SubResource("AnimationLibrary_t7o5p")

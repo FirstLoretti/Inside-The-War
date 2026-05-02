@@ -9,6 +9,7 @@ namespace InsideTheWar.Entities;
 public partial class AIUnit : Unit
 {
     [Export] private float _checkEnemiesInVisionTimer = 0.25f;
+    [Export] private float _checkEnemiesInChargeTimer = 0.1f;
     [Export] private float _movementRadiusMin = 50.0f;
     [Export] private float _movementRadiusMax = 200.0f;
     public float MovementRadiusMin => _movementRadiusMin;
@@ -17,15 +18,30 @@ public partial class AIUnit : Unit
     public float MinIdleTime { get; private set; }
     public float MaxIdleTime { get; private set; }
     public float RandomIdleTime { get; set; }
-
     public AISquad MySquad { get; set; }
+    // public new UnitStates CurrentState
+    // {
+    //     get => _currentStateInternal;
+    //     set
+    //     {
+    //         if(_currentStateInternal != value)
+    //         {
+    //             GD.Print($"[Unit] {Name}: {_currentStateInternal} -> {value}");
+    //             //GD.Print(System.Environment.StackTrace);
+
+    //             _currentStateInternal = value;
+    //         }
+    //     }
+    // }
 
     public event Action<AIUnit> ReadyToAct;
     public event Action<Node2D> EnemySpotted;
 
-    private AIUnitData AIStats => (AIUnitData)Stats;
     private float _currentVisionTimer;
-    private Node2D _currentTarget;
+    private float _currentChargeVisionTimer;
+    private Node2D _currentAttackTarget;
+    private AIUnitData AIStats => (AIUnitData)Stats;
+    //private UnitStates _currentStateInternal;
 
     public override void _Ready()
     {
@@ -35,6 +51,7 @@ public partial class AIUnit : Unit
         MaxIdleTime = AIStats.MaxIdleTime;
 
         _currentVisionTimer = 0.0f;
+        _currentChargeVisionTimer = 0.0f;
     }
 
     public override void _Process(double delta)
@@ -52,6 +69,23 @@ public partial class AIUnit : Unit
     protected override void ProcessMovement(float delta)
     {
         if (CurrentState != UnitStates.Moving && CurrentState != UnitStates.Charging) { return; }
+
+        if (CurrentState == UnitStates.Charging)
+        {
+            UpdateChargeTimer(delta);
+
+            if (CurrentState == UnitStates.Attacking || CurrentState == UnitStates.BattleReady)
+            {
+                Velocity = Vector2.Zero;
+
+                if (CurrentState == UnitStates.BattleReady)
+                {
+                    _animationPlayer.Play(IdleAnim);
+                }
+
+                return;
+            }
+        }
 
         float distanceToTarget = GlobalPosition.DistanceTo(TargetPosition);
 
@@ -112,23 +146,33 @@ public partial class AIUnit : Unit
 
     private void EngageTarget() //! Дубляж с CheckForEnemies
     {
-        CurrentState = UnitStates.BattleReady;
+        var targets = _attackDistanceArea.GetOverlappingBodies()
+        .OfType<Unit>()
+        .Where(t => t.IsInGroup("PlayerUnits")) //! Сделать общую константу PlayerGroup
+        .OrderBy(t => t.GlobalPosition.DistanceSquaredTo(GlobalPosition));
 
-        _currentTarget = _attackDistanceArea.GetOverlappingBodies()
-        .Where(t => t.IsInGroup("PlayerUnits")) //! Сделать общую константу
-        .OrderBy(t => t.GlobalPosition.DistanceSquaredTo(GlobalPosition))
-        .FirstOrDefault();
-
-        if (_currentTarget != null)
+        foreach (var targetUnit in targets)
         {
-            CurrentState = UnitStates.Attacking;
-            var direction = GlobalPosition.DirectionTo(_currentTarget.GlobalPosition);
-            _sprite2D.FlipH = direction.X < 0.0f;
+            if (targetUnit.UnitsAttackingMe.Count < Unit.MaxUnitsAttackers)
+            {
+                targetUnit.UnitsAttackingMe.Add(this);
+                _currentAttackTarget = targetUnit;
+                CurrentState = UnitStates.Attacking;
+
+                _animationPlayer.Play(AttackAnim);
+                _sprite2D.FlipH = GlobalPosition.DirectionTo(_currentAttackTarget.GlobalPosition).X < 0.0f;
+
+                return;
+            }
         }
+
+        CurrentState = UnitStates.BattleReady;
     }
 
     private void UpdateVision(float delta)
     {
+        if (CurrentState == UnitStates.Attacking) { return; }
+
         _currentVisionTimer -= delta;
         if (_currentVisionTimer <= 0.0f)
         {
@@ -145,6 +189,25 @@ public partial class AIUnit : Unit
         {
             CurrentState = UnitStates.WaitingOrder;
             ReadyToAct?.Invoke(this);
+        }
+    }
+
+    private void UpdateChargeTimer(float delta)
+    {
+        _currentChargeVisionTimer -= delta;
+
+        if (_currentChargeVisionTimer <= 0.0f)
+        {
+            ProcessCharge();
+            _currentChargeVisionTimer = _checkEnemiesInChargeTimer;
+        }
+    }
+
+    private void ProcessCharge()
+    {
+        if (GlobalPosition.DistanceTo(TargetPosition) <= AttackDistanceRadius)
+        {
+            EngageTarget();
         }
     }
 
