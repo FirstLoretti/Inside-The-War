@@ -38,7 +38,7 @@ public static class GameMath
         }
     }
 
-    public static Vector2 CalculateSquadCenter<T>(IEnumerable<T> units) where T : Unit
+    public static Vector2 CalculateSquadCenter(IEnumerable<Node2D> units)
     {
         Vector2 squadCenter = Vector2.Zero;
         int count = 0;
@@ -84,7 +84,8 @@ public static class GameMath
 
         return speedInThisFrame;
     }
-    //! Объединение с CalculateSquadOffset, создание Debug
+    
+    //! Объединение с CalculateSquadOffset?
     public static List<Vector2> GenerateTargetPoints(Vector2 mousePos, int count, int FormationCols, int FormationRows, int FormationSpacing)
     {
         List<Vector2> points = new();
@@ -109,14 +110,19 @@ public static class GameMath
 
         var points = GenerateTargetPoints(squadTargetPosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
 
+        var squadCenter = CalculateSquadCenter(units.Cast<Node2D>());
+        var direction = (squadTargetPosition - squadCenter).Normalized();
+
+        Vector2 side = new(-direction.Y, direction.X);
+
         var sortedUnits = units
-        .OrderBy(u => u.GlobalPosition.X)
-        .ThenBy(u => u.GlobalPosition.Y)
-        .ToList();
+            .OrderBy(u => u.GlobalPosition.Dot(direction))
+            .ThenBy(u => u.GlobalPosition.Dot(side))
+            .ToList();
         var sortedPoints = points
-        .OrderBy(p => p.X)
-        .ThenBy(p => p.Y)
-        .ToList();
+            .OrderBy(p => p.Dot(direction))
+            .ThenBy(p => p.Dot(side))
+            .ToList();
 
         for (int i = 0; i < sortedUnits.Count; i++)
         {

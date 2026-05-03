@@ -15,7 +15,7 @@ public partial class GlobalSignals : Node
     //[Signal]
     //public delegate void PlayerLeaderPositionChangedEventHandler(Vector2 newPosition, int vision, int squadID);
     [Signal]
-    public delegate void EntityMovedEventHandler(ulong id, Vector2 oldPosition, Vector2 currentPosition, int vision);
+    public delegate void EntityMovedEventHandler(ulong id, Vector2 oldPosition, Vector2 currentPosition, int fogVisionDistance);
     [Signal]
     public delegate void EntitySpawnedEventHandler(ulong id, Vector2 currentPosition);
     //[Signal]

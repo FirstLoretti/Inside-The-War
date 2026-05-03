@@ -40,14 +40,12 @@ public partial class SpawnManager : Node
         var parentNode = _containers[team + "Units"];
 
         int rows, cols, spacing;
-        float vision;
 
         using (var dobby = unit.Instantiate<Unit>())
         {
             rows = dobby.FormationRows;
             cols = dobby.FormationCols;
             spacing = dobby.FormationSpacing;
-            vision = dobby.Stats.VisionDistance;
         }
 
         for (int row = 0; row < rows; row++)
@@ -70,12 +68,15 @@ public partial class SpawnManager : Node
                     newUnit.GetInstanceId(),
                     newUnit.GlobalPosition);
 
-                GlobalSignals.Instance.EmitSignal(
-                    GlobalSignals.SignalName.EntityMoved,
-                    newUnit.GetInstanceId(),
-                    newUnit.LastSignaledPos,
-                    newUnit.GlobalPosition,
-                    newUnit.Stats.VisionDistance);
+                if (newUnit.IsInGroup("PlayerUnits")) //! Рефакторинг
+                {
+                    GlobalSignals.Instance.EmitSignal(
+                        GlobalSignals.SignalName.EntityMoved,
+                        newUnit.GetInstanceId(),
+                        newUnit.LastSignaledPos,
+                        newUnit.GlobalPosition,
+                        newUnit.Stats.FogVisionDistance);
+                }
             }
         }
 

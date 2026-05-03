@@ -68,6 +68,11 @@ public partial class Unit : CharacterBody2D, IUnit
         base._Process(delta);
 
         ProcessMovement((float)delta);
+
+        if (GlobalDebugManager.IsEnabled)
+        {
+            QueueRedraw();
+        }
     }
 
     protected virtual void ProcessMovement(float delta)
@@ -79,10 +84,10 @@ public partial class Unit : CharacterBody2D, IUnit
         {
             GlobalPosition = TargetPosition;
 
-            if (GlobalPosition != LastSignaledPos)
+            if (GlobalPosition != LastSignaledPos && this.IsInGroup("PlayerUnits")) //! Рефакторинг
             {
                 GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-                GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.VisionDistance);
+                GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.FogVisionDistance);
 
                 LastSignaledPos = GlobalPosition;
             }
@@ -107,7 +112,11 @@ public partial class Unit : CharacterBody2D, IUnit
             _animationPlayer.Play(RunAnim);
             _sprite2D.FlipH = direction.X < 0.0f;
 
-            CheckFogUpdate();
+            if (this.IsInGroup("PlayerUnits"))
+            {
+                CheckFogUpdate();
+            }
+
         }
     }
 
@@ -116,7 +125,7 @@ public partial class Unit : CharacterBody2D, IUnit
         if (GlobalPosition.DistanceTo(LastSignaledPos) > _updateSignalsTreshold)
         {
             GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-            GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.VisionDistance);
+            GetInstanceId(), LastSignaledPos, GlobalPosition, Stats.FogVisionDistance);
 
             LastSignaledPos = GlobalPosition;
         }
@@ -126,13 +135,10 @@ public partial class Unit : CharacterBody2D, IUnit
     {
         if (!GlobalDebugManager.IsEnabled) { return; }
 
-        base._Draw();
-
         var lineColor = CurrentState == UnitStates.Moving ? Colors.Green : Colors.Blue;
 
-        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Orange with { A = 0.25f });
+        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Orange with { A = 0.5f });
         DrawLine(Vector2.Zero, ToLocal(TargetPosition), lineColor, 4.0f);
-        DrawCircle(Vector2.Zero, Stats.VisionDistance, Colors.Yellow with { A = 0.2f });
     }
 
 

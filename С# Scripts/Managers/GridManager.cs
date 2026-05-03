@@ -30,10 +30,28 @@ public partial class GridManager : Node2D
         AddToGroup("Debuggable");
     }
 
+    public bool IsAreaFree(Vector2I startCell, int cols, int rows)
+    {
+        for (int x = 0; x < cols; x++)
+        {
+            for (int y = 0; y < rows; y++)
+            {
+                var cellInArea = new Vector2I(startCell.X + x, startCell.Y + y);
+                if (IsCellOccupied(cellInArea))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void OnEntitySpawned(ulong id, Vector2 currentPos)
     {
         var spawnCell = TargetCell(currentPos);
         _occupiedCells[spawnCell] = id;
+
         QueueRedraw();
     }
 
@@ -80,19 +98,19 @@ public partial class GridManager : Node2D
     {
         int gridWidth = 20;
         int gridHeight = 20;
-        Color color = new Color(1, 1, 1, 0.25f);
+        Color color = new(1, 1, 1, 0.25f);
 
         for (int i = 0; i <= gridWidth; i++)
         {
-            Vector2 from = new Vector2(i * _cellSize, 0);
-            Vector2 to = new Vector2(i * _cellSize, _cellSize * gridHeight);
+            Vector2 from = new(i * _cellSize, 0);
+            Vector2 to = new(i * _cellSize, _cellSize * gridHeight);
             DrawLine(from, to, color);
         }
 
         for (int j = 0; j <= gridHeight; j++)
         {
-            Vector2 from = new Vector2(0, j * _cellSize);
-            Vector2 to = new Vector2(_cellSize * gridWidth, j * _cellSize);
+            Vector2 from = new(0, j * _cellSize);
+            Vector2 to = new(_cellSize * gridWidth, j * _cellSize);
             DrawLine(from, to, color);
         }
     }
@@ -107,8 +125,6 @@ public partial class GridManager : Node2D
     }
     public override void _ExitTree()
     {
-        base._ExitTree();
-
         GlobalSignals.Instance.EntitySpawned -= OnEntitySpawned;
         GlobalSignals.Instance.EntityMoved -= OnEntityMoved;
     }

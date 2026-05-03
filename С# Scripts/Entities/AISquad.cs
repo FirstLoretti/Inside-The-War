@@ -5,13 +5,26 @@ using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Entities;
 
-public partial class AISquad : Node
+public partial class AISquad : Node2D
 {
     public List<AIUnit> Units { get; set; } = new();
 
     public int ExpectedUnitsCount { get; set; }
 
     private Unit _currentTarget;
+
+    public override void _Ready()
+    {
+        AddToGroup("Debuggable"); //! Create const
+    }
+
+    public override void _Process(double delta)
+    {
+        if (GlobalDebugManager.IsEnabled)
+        {
+            QueueRedraw();
+        }
+    }
 
     public void OnEnemySpotted(Node2D enemy)
     {
@@ -65,6 +78,19 @@ public partial class AISquad : Node
 
             u.MoveTo(point, RandomWaitingTime);
         }
+    }
+
+    public override void _Draw()
+    {
+        if (!GlobalDebugManager.IsEnabled || Units.Count == 0) return;
+
+        var squadCenter = GameMath.CalculateSquadCenter(Units);
+        var localCenter = ToLocal(squadCenter);
+
+        //! Vision is a rectangle
+        //! Doesn't work correctly if spacing is greater than 80
+        DrawCircle(localCenter, Units[0].Stats.VisionDistance, Colors.Yellow with { A = 0.2f });
+        DrawCircle(localCenter, Units[0].Stats.VisionDistance, Colors.Yellow with { A = 0.3f }, false, 2.0f);
     }
 
 }

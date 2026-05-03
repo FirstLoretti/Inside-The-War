@@ -5,7 +5,7 @@ namespace InsideTheWar.Singletons;
 public partial class GlobalDebugManager : Node
 {
     public GlobalDebugManager Instance { get; private set; }
-    public static bool IsEnabled { get; private set; }
+    public static bool IsEnabled { get; private set; } = true;
 
     public override void _Ready()
     {

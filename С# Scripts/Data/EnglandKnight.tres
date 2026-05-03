@@ -4,4 +4,5 @@
 
 [resource]
 script = ExtResource("1_mwvsl")
+_fogVisionDistance = 4
 metadata/_custom_type_script = "uid://b35me2gkirucg"

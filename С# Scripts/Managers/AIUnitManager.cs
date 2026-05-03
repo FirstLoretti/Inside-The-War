@@ -26,6 +26,7 @@ public partial class AIUnitManager : Node
             if (!SquadsById.ContainsKey(unit.SquadId))
             {
                 AISquad newSquad = new();
+                AddChild(newSquad);
                 SquadsById[unit.SquadId] = newSquad;
                 newSquad.ExpectedUnitsCount = unit.FormationCols * unit.FormationRows;
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Singletons;
@@ -12,7 +13,7 @@ public partial class FogOfWar : Node
     [Export] private TileMapLayer _fogExplored;
 
     private HashSet<Vector2I> _exploredCells = new();
-    //private Dictionary<int, (Vector2I currentCell, int vision)> _squadVision = new();
+    private Dictionary<ulong, (Vector2I currentCell, int vision)> _unitVisionById = new();
 
     public override void _Ready()
     {
@@ -20,24 +21,59 @@ public partial class FogOfWar : Node
         GlobalSignals.Instance.EntityMoved += OnEntityMoved;
     }
 
-    private void OnEntityMoved(ulong id, Vector2 oldPos, Vector2 currentPos, int vision)
+    private void OnEntityMoved(ulong id, Vector2 oldPosition, Vector2 currentPosition, int vision)
     {
-        
-        var oldCell = _mainMap.LocalToMap(oldPos);
-        var currentCell = _mainMap.LocalToMap(currentPos);
+        var currentCell = _mainMap.LocalToMap(currentPosition);
+        _unitVisionById[id] = (currentCell, vision);
 
-        foreach (var cell in GameMath.GetCellsInRadius(oldCell, vision))
+        RevealNewTerritory(currentCell, vision);
+
+        UpdateDynamicVision();
+        UpdateAIVisibility();
+    }
+
+    private void RevealNewTerritory(Vector2I center, int radius)
+    {
+        foreach (var c in GameMath.GetCellsInRadius(center, radius))
         {
-            _fogExplored.SetCell(cell, 0, Vector2I.Zero); 
+            if (!_exploredCells.Contains(c))
+            {
+                _fogUnexplored.SetCell(c, -1);
+                _exploredCells.Add(c);
+            }
+        }
+    }
+
+    private void UpdateDynamicVision() //! Очень тяжело!
+    {
+        foreach (var cell in _exploredCells)
+        {
+            _fogExplored.SetCell(cell, 0, Vector2I.Zero);
         }
 
-        foreach (var cell in GameMath.GetCellsInRadius(currentCell, vision))
+        foreach (var visionData in _unitVisionById.Values)
         {
-            _fogUnexplored.SetCell(cell, -1); 
+            foreach (var cell in GameMath.GetCellsInRadius(visionData.currentCell, visionData.vision))
+            {
+                _fogExplored.SetCell(cell, -1);
+            }
+        }
+    }
 
-            _exploredCells.Add(cell);
+    private void UpdateAIVisibility() //! Очень тяжело!
+    {
+        var aiUnits = GetTree().GetNodesInGroup("AIUnits");
 
-            _fogExplored.SetCell(cell, -1);
+        foreach (Node2D unit in aiUnits)
+        {
+            var cell = _mainMap.LocalToMap(unit.GlobalPosition);
+            var isCellVisible = _fogExplored.GetCellSourceId(cell) == -1;
+
+            var sprite = unit.GetNodeOrNull<Sprite2D>("Sprite2D");
+            if(sprite != null)
+            {
+                sprite.Visible = isCellVisible;
+            }
         }
     }
     /*
