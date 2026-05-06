@@ -1,0 +1,137 @@
+using System.Collections.Generic;
+using Godot;
+using InsideTheWar.Interfaces;
+using InsideTheWar.Singletons;
+
+namespace InsideTheWar.Managers;
+
+public partial class GridManager : Node2D, IGrid
+{
+    [Export] private TileMapLayer _mainMap;
+    [Export] private int _cellSize = 64;
+    public int CellSize => _cellSize;
+
+    public Vector2 TargetPixels(Vector2I targetCell) => _mainMap.MapToLocal(targetCell);
+    public Vector2I TargetCell(Vector2 targetPixels) => _mainMap.LocalToMap(targetPixels);
+    public bool IsCellOccupied(Vector2I cellCoords) => _occupiedCells.ContainsKey(cellCoords);
+    // public void SetOccupied(Vector2 pos, ulong entityId) => _occupiedCells[TargetCell(pos)] = entityId;
+
+    private Dictionary<Vector2I, ulong> _occupiedCells = new();
+    private IDebug _debug;
+
+    public override void _Ready()
+    {
+        base._Ready();
+
+        GlobalSignals.Instance.EntitySpawned += OnEntitySpawned;
+        GlobalSignals.Instance.EntityMoved += OnEntityMoved;
+
+        AddToGroup("Debuggable");
+    }
+
+    public void Init(IDebug debug)
+    {
+        _debug = debug;
+    }
+
+    public bool IsAreaFree(Vector2I startCell, int cols, int rows)
+    {
+        for (int x = 0; x < cols; x++)
+        {
+            for (int y = 0; y < rows; y++)
+            {
+                var cellInArea = new Vector2I(startCell.X + x, startCell.Y + y);
+                if (IsCellOccupied(cellInArea))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void OnEntitySpawned(ulong id, Vector2 currentPos)
+    {
+        var spawnCell = TargetCell(currentPos);
+        _occupiedCells[spawnCell] = id;
+
+        QueueRedraw();
+    }
+
+    private void OnEntityMoved(ulong id, Vector2 oldPos, Vector2 currentPos, int vision)
+    {
+        Vector2I oldCell = TargetCell(oldPos);
+        Vector2I newCell = TargetCell(currentPos);
+
+        if (oldCell != newCell)
+        {
+            if (_occupiedCells.TryGetValue(oldCell, out ulong existingID) && existingID == id)
+            {
+                _occupiedCells.Remove(oldCell);
+            }
+
+            _occupiedCells[newCell] = id;
+            QueueRedraw();
+        }
+    }
+
+    public override void _Draw()
+    {
+        if (_debug == null) { return; }
+        if (!_debug.IsEnabled) { return; }
+
+        DrawGrid();
+        DrawOccupationCells();
+    }
+    /*
+      public bool IsAreaOccupied(Vector2I cell, int radius)
+      {
+          for (int x = -radius; x <= radius; x++)
+          {
+              for (int y = -radius; y <= radius; y++)
+              {
+                  Vector2I checkCell = cell + new Vector2I(x, y);
+                  if (_occupiedCells.ContainsKey(checkCell)) { return true; }
+              }
+          }
+
+          return false;
+      }
+  */
+    private void DrawGrid()
+    {
+        int gridWidth = 20;
+        int gridHeight = 20;
+        Color color = new(1, 1, 1, 0.25f);
+
+        for (int i = 0; i <= gridWidth; i++)
+        {
+            Vector2 from = new(i * _cellSize, 0);
+            Vector2 to = new(i * _cellSize, _cellSize * gridHeight);
+            DrawLine(from, to, color);
+        }
+
+        for (int j = 0; j <= gridHeight; j++)
+        {
+            Vector2 from = new(0, j * _cellSize);
+            Vector2 to = new(_cellSize * gridWidth, j * _cellSize);
+            DrawLine(from, to, color);
+        }
+    }
+
+    private void DrawOccupationCells()
+    {
+        foreach (var cell in _occupiedCells.Keys)
+        {
+            var rect = new Rect2(cell * _cellSize, new Vector2(_cellSize, _cellSize));
+            DrawRect(rect, new Color(1, 0, 0, 0.15f));
+        }
+    }
+    public override void _ExitTree()
+    {
+        GlobalSignals.Instance.EntitySpawned -= OnEntitySpawned;
+        GlobalSignals.Instance.EntityMoved -= OnEntityMoved;
+    }
+
+}

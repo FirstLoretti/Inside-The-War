@@ -1,0 +1,6 @@
+.godot/
+*.import
+bin/
+obj/
+.vs/
+.vscode/

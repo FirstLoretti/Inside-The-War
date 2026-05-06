@@ -1,0 +1,158 @@
+[gd_scene format=4 uid="uid://bh73u1p2p02rg"]
+
+[ext_resource type="Script" uid="uid://vbyfihomv71t" path="res://С# Scripts/Managers/LevelController.cs" id="1_gwjdr"]
+[ext_resource type="Script" uid="uid://bj4g25njd2k3f" path="res://С# Scripts/PlayerInputHandler.cs" id="2_2vekm"]
+[ext_resource type="Texture2D" uid="uid://gge1boekersq" path="res://Assets/TinySwords/Terrain/Tileset/Tilemap_color1.png" id="2_lvtmh"]
+[ext_resource type="Texture2D" uid="uid://c3dc7yyiehea7" path="res://Assets/FogOfWar/WhiteSquare.png" id="3_yyih5"]
+[ext_resource type="Script" uid="uid://cl2vo3mqelebo" path="res://С# Scripts/FogOfWar.cs" id="5_gwjdr"]
+[ext_resource type="Script" uid="uid://ch5qiojgmncbs" path="res://С# Scripts/Managers/GridManager.cs" id="5_yx171"]
+[ext_resource type="Script" uid="uid://27pwpqx7cc72" path="res://С# Scripts/Managers/PlayerUnitManager.cs" id="6_yhmtn"]
+[ext_resource type="Script" uid="uid://do3dnvx1ujoho" path="res://С# Scripts/Managers/SpawnManager.cs" id="7_gwjdr"]
+[ext_resource type="Script" uid="uid://dshoy8gsivuyk" path="res://С# Scripts/Managers/AIUnitManager.cs" id="8_gwjdr"]
+[ext_resource type="Script" uid="uid://cjlrogr4qu7rw" path="res://С# Scripts/Managers/SelectionManager.cs" id="8_lvtmh"]
+[ext_resource type="PackedScene" uid="uid://dywccmq1yve7e" path="res://WarriorRed.tscn" id="9_cpsxm"]
+[ext_resource type="PackedScene" uid="uid://ccg4bq4knux3c" path="res://WarriorBlue.tscn" id="10_hmewc"]
+[ext_resource type="Script" uid="uid://bo0s42frjsx75" path="res://С# Scripts/Managers/DebugManager.cs" id="13_lvtmh"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_feb5d"]
+texture = ExtResource("2_lvtmh")
+texture_region_size = Vector2i(64, 64)
+1:0/0 = 0
+3:0/0 = 0
+5:0/0 = 0
+6:0/0 = 0
+7:0/0 = 0
+8:0/0 = 0
+0:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+5:1/0 = 0
+6:1/0 = 0
+7:1/0 = 0
+8:1/0 = 0
+0:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+5:2/0 = 0
+6:2/0 = 0
+7:2/0 = 0
+8:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+5:3/0 = 0
+6:3/0 = 0
+7:3/0 = 0
+8:3/0 = 0
+0:4/0 = 0
+3:4/0 = 0
+5:4/0 = 0
+6:4/0 = 0
+7:4/0 = 0
+8:4/0 = 0
+0:5/0 = 0
+3:5/0 = 0
+5:5/0 = 0
+6:5/0 = 0
+7:5/0 = 0
+8:5/0 = 0
+0:0/0 = 0
+2:0/0 = 0
+1:2/0 = 0
+1:1/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_fc0e3"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_feb5d")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_215e1"]
+texture = ExtResource("3_yyih5")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_7sc4i"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_215e1")
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_80cx4"]
+texture = ExtResource("3_yyih5")
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_e8heu"]
+tile_size = Vector2i(64, 64)
+sources/0 = SubResource("TileSetAtlasSource_80cx4")
+
+[node name="Game" type="Node2D" unique_id=341590171]
+
+[node name="LevelController" type="Node" parent="." unique_id=1892852066 node_paths=PackedStringArray("_gridManager", "_spawnManager", "_debugManager", "_aiUnitmanager")]
+script = ExtResource("1_gwjdr")
+_gridManager = NodePath("../Managers/GridManager")
+_spawnManager = NodePath("../Managers/SpawnManager")
+_debugManager = NodePath("../Managers/DebugManager")
+_aiUnitmanager = NodePath("../Managers/AIUnitManager")
+
+[node name="PlayerInputHandler" type="Node2D" parent="." unique_id=1653074186 node_paths=PackedStringArray("_selectionManager", "_spawnManager", "_playerUnitManager")]
+script = ExtResource("2_2vekm")
+_selectionManager = NodePath("../Managers/SelectionManager")
+_spawnManager = NodePath("../Managers/SpawnManager")
+_playerUnitManager = NodePath("../Managers/PlayerUnitManager")
+
+[node name="TileMapLayers" type="Node2D" parent="." unique_id=1731826869]
+
+[node name="MainMap" type="TileMapLayer" parent="TileMapLayers" unique_id=767585441]
+scale = Vector2(1.875, 1.875)
+tile_map_data = PackedByteArray("AAACAAIAAAAFAAAAAAACAAMAAAAFAAEAAAACAAQAAAAFAAEAAAACAAUAAAAFAAEAAAAGAAYAAAAGAAIAAAAHAAYAAAAGAAIAAAAJAAYAAAAGAAIAAAAFAAcAAAAGAAQAAAAEAAcAAAAGAAQAAAADAAcAAAAGAAQAAAAGAAcAAAAGAAQAAAAHAAcAAAAGAAQAAAAIAAcAAAAGAAQAAAAJAAcAAAAGAAQAAAAKAAYAAAAHAAIAAAACAAcAAAAFAAQAAAADAAIAAAAGAAAAAAAKAAcAAAAHAAQAAAAKAAMAAAAHAAEAAAAKAAQAAAAHAAEAAAAKAAUAAAAHAAEAAAAJAAMAAAAGAAEAAAAIAAMAAAAGAAEAAAAHAAMAAAAGAAEAAAAGAAMAAAAGAAEAAAAFAAMAAAAGAAEAAAAEAAMAAAAGAAEAAAAJAAQAAAAGAAEAAAAJAAUAAAAGAAEAAAAIAAUAAAAGAAEAAAAHAAUAAAAGAAEAAAAGAAUAAAAGAAEAAAAFAAUAAAAGAAEAAAAEAAUAAAAGAAEAAAAIAAQAAAABAAEAAAAHAAQAAAABAAEAAAAGAAQAAAABAAEAAAAFAAQAAAABAAEAAAAEAAQAAAABAAEAAAADAAQAAAABAAEAAAADAAMAAAABAAEAAAADAAUAAAABAAEAAAAEAAYAAAAGAAIAAAADAAYAAAAGAAIAAAAFAAYAAAAGAAIAAAAIAAYAAAAGAAIAAAAEAAIAAAAGAAAAAAAFAAIAAAAGAAAAAAAGAAIAAAAGAAAAAAAHAAIAAAAGAAAAAAAIAAIAAAAGAAAAAAAJAAIAAAAGAAAAAAAKAAIAAAAHAAAAAAACAAYAAAAFAAIAAAA=")
+tile_set = SubResource("TileSet_fc0e3")
+
+[node name="FogUnexplored" type="TileMapLayer" parent="TileMapLayers" unique_id=1219065181]
+modulate = Color(0, 0, 0, 1)
+z_index = 11
+tile_map_data = PackedByteArray("AAAEAAQAAAAAAAAAAAAFAAUAAAAAAAAAAAAGAAYAAAAAAAAAAAAHAAcAAAAAAAAAAAAIAAcAAAAAAAAAAAAJAAgAAAAAAAAAAAAKAAkAAAAAAAAAAAALAAkAAAAAAAAAAAAMAAoAAAAAAAAAAAANAAoAAAAAAAAAAAAOAAsAAAAAAAAAAAAPAAsAAAAAAAAAAAAQAAsAAAAAAAAAAAAQAAwAAAAAAAAAAAARAAwAAAAAAAAAAAASAAwAAAAAAAAAAAATAAwAAAAAAAAAAAATAAsAAAAAAAAAAAATAAoAAAAAAAAAAAATAAkAAAAAAAAAAAATAAgAAAAAAAAAAAATAAcAAAAAAAAAAAATAAYAAAAAAAAAAAAPAAYAAAAAAAAAAAAPAAUAAAAAAAAAAAAPAAQAAAAAAAAAAAAOAAQAAAAAAAAAAAANAAQAAAAAAAAAAAAMAAQAAAAAAAAAAAALAAQAAAAAAAAAAAAKAAQAAAAAAAAAAAAJAAQAAAAAAAAAAAAIAAQAAAAAAAAAAAAHAAQAAAAAAAAAAAAGAAQAAAAAAAAAAAAFAAQAAAAAAAAAAAAGAAUAAAAAAAAAAAAHAAUAAAAAAAAAAAAHAAYAAAAAAAAAAAAIAAYAAAAAAAAAAAAIAAUAAAAAAAAAAAAJAAUAAAAAAAAAAAAJAAYAAAAAAAAAAAAJAAcAAAAAAAAAAAAKAAcAAAAAAAAAAAAKAAYAAAAAAAAAAAAKAAUAAAAAAAAAAAALAAUAAAAAAAAAAAALAAYAAAAAAAAAAAALAAcAAAAAAAAAAAALAAgAAAAAAAAAAAAKAAgAAAAAAAAAAAAMAAgAAAAAAAAAAAAMAAcAAAAAAAAAAAAMAAYAAAAAAAAAAAAMAAUAAAAAAAAAAAANAAUAAAAAAAAAAAANAAYAAAAAAAAAAAANAAcAAAAAAAAAAAANAAgAAAAAAAAAAAANAAkAAAAAAAAAAAAMAAkAAAAAAAAAAAAOAAkAAAAAAAAAAAAOAAgAAAAAAAAAAAAOAAcAAAAAAAAAAAAOAAYAAAAAAAAAAAAOAAUAAAAAAAAAAAAPAAcAAAAAAAAAAAAPAAgAAAAAAAAAAAAPAAkAAAAAAAAAAAAPAAoAAAAAAAAAAAAOAAoAAAAAAAAAAAAQAAoAAAAAAAAAAAAQAAkAAAAAAAAAAAAQAAgAAAAAAAAAAAAQAAcAAAAAAAAAAAAQAAYAAAAAAAAAAAAQAAUAAAAAAAAAAAAQAAQAAAAAAAAAAAARAAQAAAAAAAAAAAARAAUAAAAAAAAAAAARAAYAAAAAAAAAAAARAAcAAAAAAAAAAAARAAgAAAAAAAAAAAARAAkAAAAAAAAAAAARAAoAAAAAAAAAAAARAAsAAAAAAAAAAAASAAsAAAAAAAAAAAASAAoAAAAAAAAAAAASAAkAAAAAAAAAAAASAAgAAAAAAAAAAAASAAcAAAAAAAAAAAASAAYAAAAAAAAAAAASAAUAAAAAAAAAAAASAAQAAAAAAAAAAAATAAQAAAAAAAAAAAATAAUAAAAAAAAAAAAHAAsAAAAAAAAAAAAHAAoAAAAAAAAAAAAHAAkAAAAAAAAAAAAHAAgAAAAAAAAAAAAGAAgAAAAAAAAAAAAGAAcAAAAAAAAAAAAFAAcAAAAAAAAAAAAFAAYAAAAAAAAAAAAEAAYAAAAAAAAAAAAEAAUAAAAAAAAAAAAEAAcAAAAAAAAAAAAEAAgAAAAAAAAAAAAEAAkAAAAAAAAAAAAEAAoAAAAAAAAAAAAEAAsAAAAAAAAAAAAEAAwAAAAAAAAAAAAFAAwAAAAAAAAAAAAFAAsAAAAAAAAAAAAFAAoAAAAAAAAAAAAFAAkAAAAAAAAAAAAFAAgAAAAAAAAAAAAGAAkAAAAAAAAAAAAGAAoAAAAAAAAAAAAGAAsAAAAAAAAAAAAGAAwAAAAAAAAAAAAHAAwAAAAAAAAAAAAIAAwAAAAAAAAAAAAIAAsAAAAAAAAAAAAIAAoAAAAAAAAAAAAIAAkAAAAAAAAAAAAIAAgAAAAAAAAAAAAJAAkAAAAAAAAAAAAJAAoAAAAAAAAAAAAJAAsAAAAAAAAAAAAJAAwAAAAAAAAAAAAKAAwAAAAAAAAAAAAKAAsAAAAAAAAAAAAKAAoAAAAAAAAAAAALAAoAAAAAAAAAAAALAAsAAAAAAAAAAAALAAwAAAAAAAAAAAAMAAwAAAAAAAAAAAAMAAsAAAAAAAAAAAANAAsAAAAAAAAAAAANAAwAAAAAAAAAAAAOAAwAAAAAAAAAAAAPAAwAAAAAAAAAAAAUAAQAAAAAAAAAAAAUAAUAAAAAAAAAAAAUAAYAAAAAAAAAAAAUAAcAAAAAAAAAAAAUAAgAAAAAAAAAAAAUAAkAAAAAAAAAAAAUAAoAAAAAAAAAAAAUAAsAAAAAAAAAAAAUAAwAAAAAAAAAAAAUAA0AAAAAAAAAAAAUAA4AAAAAAAAAAAATAA4AAAAAAAAAAAASAA4AAAAAAAAAAAARAA4AAAAAAAAAAAAQAA4AAAAAAAAAAAAPAA4AAAAAAAAAAAAOAA4AAAAAAAAAAAANAA4AAAAAAAAAAAAMAA0AAAAAAAAAAAALAA0AAAAAAAAAAAAKAA0AAAAAAAAAAAAJAA0AAAAAAAAAAAAIAA0AAAAAAAAAAAAHAA0AAAAAAAAAAAAGAA0AAAAAAAAAAAAFAA0AAAAAAAAAAAAEAA0AAAAAAAAAAAANAA0AAAAAAAAAAAAOAA0AAAAAAAAAAAAPAA0AAAAAAAAAAAAQAA0AAAAAAAAAAAARAA0AAAAAAAAAAAASAA0AAAAAAAAAAAATAA0AAAAAAAAAAAAMAA4AAAAAAAAAAAALAA4AAAAAAAAAAAAKAA4AAAAAAAAAAAAJAA4AAAAAAAAAAAAIAA4AAAAAAAAAAAAHAA4AAAAAAAAAAAAGAA4AAAAAAAAAAAAFAA4AAAAAAAAAAAAEAA4AAAAAAAAAAAAEAAMAAAAAAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAAAAAAAAAAHAAMAAAAAAAAAAAAIAAMAAAAAAAAAAAAJAAMAAAAAAAAAAAAKAAMAAAAAAAAAAAALAAMAAAAAAAAAAAAMAAMAAAAAAAAAAAANAAMAAAAAAAAAAAAOAAMAAAAAAAAAAAAPAAMAAAAAAAAAAAAQAAMAAAAAAAAAAAARAAMAAAAAAAAAAAASAAMAAAAAAAAAAAATAAMAAAAAAAAAAAAUAAMAAAAAAAAAAAADAAMAAAAAAAAAAAADAAQAAAAAAAAAAAADAAUAAAAAAAAAAAADAAYAAAAAAAAAAAADAAcAAAAAAAAAAAADAAgAAAAAAAAAAAADAAkAAAAAAAAAAAADAAoAAAAAAAAAAAADAAsAAAAAAAAAAAADAAwAAAAAAAAAAAADAA0AAAAAAAAAAAADAA4AAAAAAAAAAAA=")
+tile_set = SubResource("TileSet_7sc4i")
+
+[node name="FogExplored" type="TileMapLayer" parent="TileMapLayers" unique_id=1183121463]
+modulate = Color(0, 0, 0, 0.39607844)
+z_index = 11
+tile_set = SubResource("TileSet_e8heu")
+
+[node name="FogOfWar" type="Node" parent="TileMapLayers" unique_id=1840486662 node_paths=PackedStringArray("_mainMap", "_fogUnexplored", "_fogExplored")]
+script = ExtResource("5_gwjdr")
+_mainMap = NodePath("../MainMap")
+_fogUnexplored = NodePath("../FogUnexplored")
+_fogExplored = NodePath("../FogExplored")
+
+[node name="Managers" type="Node" parent="." unique_id=353278863]
+
+[node name="SpawnManager" type="Node2D" parent="Managers" unique_id=172070756 node_paths=PackedStringArray("_playerUnits", "_aiUnits")]
+script = ExtResource("7_gwjdr")
+UnitEngland = ExtResource("9_cpsxm")
+UnitFrance = ExtResource("10_hmewc")
+_playerUnits = NodePath("../../PlayerUnits")
+_aiUnits = NodePath("../../AIUnits")
+
+[node name="GridManager" type="Node2D" parent="Managers" unique_id=449884433 node_paths=PackedStringArray("_mainMap")]
+script = ExtResource("5_yx171")
+_mainMap = NodePath("../../TileMapLayers/MainMap")
+
+[node name="PlayerUnitManager" type="Node" parent="Managers" unique_id=2087029240 node_paths=PackedStringArray("_unitsContainer", "_gridManager", "_selectionManager")]
+script = ExtResource("6_yhmtn")
+_unitsContainer = NodePath("../../PlayerUnits")
+_minSquadMoveDistance = 60.0
+_gridManager = NodePath("../GridManager")
+_selectionManager = NodePath("../SelectionManager")
+
+[node name="AIUnitManager" type="Node" parent="Managers" unique_id=871301421]
+script = ExtResource("8_gwjdr")
+
+[node name="SelectionManager" type="Node" parent="Managers" unique_id=2015783941 node_paths=PackedStringArray("_playerUnitsContainer")]
+script = ExtResource("8_lvtmh")
+_playerUnitsContainer = NodePath("../../PlayerUnits")
+
+[node name="DebugManager" type="Node" parent="Managers" unique_id=49376436]
+script = ExtResource("13_lvtmh")
+
+[node name="PlayerUnits" type="Node2D" parent="." unique_id=1017900366]
+
+[node name="AIUnits" type="Node2D" parent="." unique_id=661348590]
