@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Dynamic;
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Interfaces;
@@ -7,61 +6,8 @@ using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Entities;
 
-public partial class AISquad : Node2D
+public partial class AISquad : Squad
 {
-    public List<Unit> Units { get; set; } = new();
-    public int ExpectedUnitsCount { get; set; }
-    public IDebug Debug { get; set; }
-
-    private Unit _currentTarget;
-
-    public override void _Ready()
-    {
-        AddToGroup("Debuggable"); //! Create const
-    }
-
-    public void Init(IDebug debug)
-    {
-        Debug = debug;
-    }
-
-    public override void _Process(double delta)
-    {
-        if (Debug.IsEnabled)
-        {
-            QueueRedraw();
-        }
-    }
-
-    public void OnEnemySpotted(Node2D enemy)
-    {
-        if (_currentTarget != null || enemy is not Unit enemyUnit) { return; }
-        {
-            _currentTarget = enemyUnit;
-
-            GlobalSignals.Instance.EmitRequestSquadUnits(enemyUnit.SquadId, (enemyUnits) =>
-            {
-                var enemyCenter = GameMath.CalculateSquadCenter(enemyUnits);
-                ChargeTarget(enemyCenter);
-            });
-        }
-    }
-
-    public void ChargeTarget(Vector2 targetPosition)
-    {
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, targetPosition);
-
-        foreach (var pair in assigments)
-        {
-            var unit = pair.Key as AIUnit;
-            var target = pair.Value;
-
-            if (unit.CurrentState == UnitStates.Attacking) continue;
-
-            unit.Charge(target);
-        }
-    }
-
     public void OnUnitReady(AIUnit unit)
     {
         if (Units.Count < ExpectedUnitsCount) { return; } //! Сломается при убийстве

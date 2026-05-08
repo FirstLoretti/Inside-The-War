@@ -19,7 +19,7 @@ public partial class SpawnManager : Node2D, ISpawner
     [Export] private Node2D _aiUnits;
 
     private int _lastSquadId = 0;
-    private Dictionary<String, Node2D> _containers;
+    private Dictionary<StringName, Node2D> _containers;
     private Vector2I _squadColsAndRows;
     private int _formationSpacing; //! Need refactoring
     private IGrid _grid;
@@ -29,11 +29,11 @@ public partial class SpawnManager : Node2D, ISpawner
     {
         _containers = new()
         {
-            {"PlayerUnits", _playerUnits},
-            {"AIUnits", _aiUnits}
+            {Constants.PlayerUnits, _playerUnits},
+            {Constants.AIUnits, _aiUnits}
         };
 
-        AddToGroup("Debuggable");
+        AddToGroup(Constants.Debuggable);
 
         using (var dobby = UnitEngland.Instantiate<Unit>()) //! Need refactor
         {
@@ -48,8 +48,9 @@ public partial class SpawnManager : Node2D, ISpawner
         _debug = debug;
     }
 
-    public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, string team)
+    public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, string unitsGroup)
     {
+        GD.Print("1");
         int rows, cols, spacing;
 
         using (var dobby = unit.Instantiate<Unit>())
@@ -70,7 +71,7 @@ public partial class SpawnManager : Node2D, ISpawner
         _lastSquadId += 1;
         var currentSquadId = _lastSquadId;
 
-        var parentNode = _containers[team + "Units"];
+        var parentNode = _containers[unitsGroup];
 
         for (int row = 0; row < rows; row++)
         {
@@ -84,7 +85,7 @@ public partial class SpawnManager : Node2D, ISpawner
                 {
                     newUnit.Debug = _debug;
                 }
-                newUnit.AddToGroup(team + "Units");
+                newUnit.AddToGroup(unitsGroup);
 
                 var offset = GameMath.CalculateSquadOffset(col, row, newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
                 newUnit.GlobalPosition = spawnPosition + offset;
@@ -96,15 +97,24 @@ public partial class SpawnManager : Node2D, ISpawner
                     newUnit.GetInstanceId(),
                     newUnit.GlobalPosition);
 
-                if (newUnit.IsInGroup("PlayerUnits")) //! Рефакторинг
+                if (newUnit.IsInGroup(Constants.PlayerUnits)) //! Рефакторинг
                 {
+                    var u = (PlayerUnit)newUnit;
+
                     GlobalSignals.Instance.EmitSignal(
                         GlobalSignals.SignalName.EntityMoved,
                         newUnit.GetInstanceId(),
-                        newUnit.LastSignaledPos,
+                        u.LastSignaledPosition,
                         newUnit.GlobalPosition,
                         newUnit.Stats.FogVisionDistance);
+
+                    newUnit.EnemyUnitsGroup = Constants.AIUnits;
                 }
+                else
+                {
+                    newUnit.EnemyUnitsGroup = Constants.PlayerUnits;
+                }
+
             }
         }
 
@@ -113,8 +123,7 @@ public partial class SpawnManager : Node2D, ISpawner
 
     public override void _Draw()
     {
-        if (_debug == null) { return; }
-        if (!_debug.IsShowSpawnArea) { return; }
+        if (_debug == null || !_debug.IsShowSpawnArea) { return; }
 
         DrawSquadOccupationArea(GetGlobalMousePosition(), _squadColsAndRows.X, _squadColsAndRows.Y, _formationSpacing, _grid.CellSize);
     }
@@ -122,11 +131,11 @@ public partial class SpawnManager : Node2D, ISpawner
     //! Need refactoring
     private void DrawSquadOccupationArea(Vector2 areaCenter, int cols, int rows, int spacing, int cellSize)
     {
-        // Vector2 squadAreaSize = new(cols * spacing, rows * spacing);
-        // var squadArea = GameMath.CalculateAreaAroundPosition(areaCenter, squadAreaSize, _grid.CellSize);
+        Vector2 squadAreaSize = new(cols * spacing, rows * spacing);
+        var squadArea = GameMath.CalculateAreaAroundPosition(areaCenter, squadAreaSize, _grid.CellSize);
 
-        // Rect2 rect2 = new(squadArea.centerCell * cellSize, new Vector2(cols * cellSize, rows * cellSize));
-        // DrawRect(rect2, Colors.Cyan with { A = 0.3f });
+        Rect2 rect2 = new(squadArea.centerCell * cellSize, new Vector2(cols * cellSize, rows * cellSize));
+        DrawRect(rect2, Colors.Cyan with { A = 0.3f });
     }
 
 }

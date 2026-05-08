@@ -1,9 +1,7 @@
-using System.Collections.Generic;
-using Godot;
 
 namespace InsideTheWar.Entities;
 
-public partial class PlayerSquad : Node
+public partial class PlayerSquad : Squad
 {
-    public List<Unit> Units { get; set; } = new();
+
 }

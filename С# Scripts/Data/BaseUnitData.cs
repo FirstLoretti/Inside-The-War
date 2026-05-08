@@ -11,8 +11,11 @@ public partial class BaseUnitData : Resource
     [Export] private float _attackDistance = 60.0f;
     [Export] private float _visionDistance = 200.0f;
     [Export] private int _fogVisionDistance = 1;
-    //[Export] public float AvoidanceWeight = 0.2f;
 
+    #region IfAvoidanceOn
+    //[Export] public float AvoidanceWeight = 0.2f;
+    #endregion
+    
     public float Health => _health;
     public float MinSpeed => _minSpeed;
     public float MaxSpeed => _maxSpeed;

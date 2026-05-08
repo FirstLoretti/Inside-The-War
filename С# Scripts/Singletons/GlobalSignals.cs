@@ -21,7 +21,7 @@ public partial class GlobalSignals : Node
     //[Signal]
     //public delegate void AIUnitReadyEventHandler(AIUnit unit);
     [Signal]
-    public delegate void RequestSpawnEventHandler(Vector2 mousPosition, string team);
+    public delegate void RequestSpawnEventHandler(Vector2 mousPosition, StringName unitsGroup);
 
     public static GlobalSignals Instance { get; private set; }
 

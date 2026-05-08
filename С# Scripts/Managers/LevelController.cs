@@ -1,4 +1,5 @@
 using Godot;
+using InsideTheWar.Helpers;
 using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Managers;
@@ -20,7 +21,7 @@ public partial class LevelController : Node
         _aiUnitmanager.Init(_debugManager);
     }
 
-    public void OnRequestSpawn(Vector2 mousePos, string team)
+    public void OnRequestSpawn(Vector2 mousePos, StringName unitsGroup)
     {
         var cell = _gridManager.TargetCell(mousePos);
         if (_gridManager.IsCellOccupied(cell))
@@ -29,21 +30,19 @@ public partial class LevelController : Node
             return;
         }
 
-        if(team == "Player")
+        if(unitsGroup == Constants.PlayerUnits)
         {
-            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, team);
+            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, Constants.PlayerUnits);
         }
-        else if(team == "AI")
+        else if(unitsGroup == Constants.AIUnits)
         {
-            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, team);
+            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, Constants.AIUnits);
         }
         
     }
 
     public override void _ExitTree()
     {
-        base._ExitTree();
-
         GlobalSignals.Instance.RequestSpawn -= OnRequestSpawn;
     }
 

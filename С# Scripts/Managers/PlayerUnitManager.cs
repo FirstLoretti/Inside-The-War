@@ -10,7 +10,7 @@ namespace InsideTheWar.Managers;
 
 public partial class PlayerUnitManager : Node
 {
-    private Dictionary<int, PlayerSquad> _squadsById = new();
+    private Dictionary<int, PlayerSquad> _squadsById = [];
 
     [ExportGroup("Nodes")]
     [Export] private Node2D _unitsContainer;
@@ -26,12 +26,8 @@ public partial class PlayerUnitManager : Node
 
     public override void _Ready()
     {
-        base._Ready();
-
         GlobalSignals.Instance.EntitySpawned += OnUnitSpawn;
         GlobalSignals.Instance.RequestSquadUnits += OnSquadUnitsRequest;
-        //GlobalSignals.Instance.PlayerLeaderPositionChanged += OnLeaderPositionChanged;
-
     }
 
     public void MoveSquadTo(Vector2 mousePosition)
@@ -39,10 +35,7 @@ public partial class PlayerUnitManager : Node
         var selectedUnits = _selectionManager.SelectedUnits;
         var allUnits = _unitsContainer.GetChildren().OfType<PlayerUnit>().ToArray();
 
-        if (selectedUnits.Count == 0)
-        {
-            return;
-        }
+        if (selectedUnits.Count == Constants.Zero) {return;}
 
         foreach (var unit in allUnits)
         {
@@ -61,33 +54,14 @@ public partial class PlayerUnitManager : Node
             return;
         }
 
-        //var leader = selectedUnits[0];
-        //Vector2I targetCell = _gridManager.TargetCell(mousePosition);
-        //_gridManager.ClearCellOccupation(leader.SquadId);
-        //_gridManager.UpdateOccupation(leader);
-        /*
-        var squadDirection = (mousePosition - squadCenter).Normalized();
-        var rotationAngle = squadDirection.Angle();
-        foreach (var unit in selectedUnits)
-        {
-            var offset = GameMath.CalculateSquadOffset(unit.Col, unit.Row,
-            unit.FormationCols, unit.FormationRows, unit.FormationSpacing);
-
-            var rotatedOffset = offset.Rotated(rotationAngle);
-
-            unit.TargetPosition = mousePosition + rotatedOffset;
-        }
-        */
         var assigments = GameMath.AssignUnitsToPointsAlgorithm(selectedUnits, mousePosition);
 
         foreach (var pair in assigments)
         {
             var unit = pair.Key as PlayerUnit;
             var point = pair.Value;
-
             unit.MoveTo(point);
         }
-
     }
 
     private void OnUnitSpawn(ulong id, Vector2 currentPosition)
@@ -114,24 +88,11 @@ public partial class PlayerUnitManager : Node
             callback?.Invoke(_squadsById[squadId].Units);
         }
     }
-    /*
-    private void OnLeaderPositionChanged(Vector2 position, int vision, int squadId)
-    {
-        Vector2I targetCell = _gridManager.TargetCell(position);
-        if (targetCell != _lastCell)
-        {
-            GlobalSignals.Instance.EmitSignal
-            (GlobalSignals.SignalName.EntityMoved, squadId, targetCell, vision);
-        }
-    }
-    */
+
     public override void _ExitTree()
     {
-        base._ExitTree();
         GlobalSignals.Instance.EntitySpawned -= OnUnitSpawn;
         GlobalSignals.Instance.RequestSquadUnits -= OnSquadUnitsRequest;
-        //GlobalSignals.Instance.PlayerLeaderPositionChanged -= OnLeaderPositionChanged;
     }
     
-
 }

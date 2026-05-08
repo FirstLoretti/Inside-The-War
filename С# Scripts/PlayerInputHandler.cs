@@ -1,4 +1,5 @@
 using Godot;
+using InsideTheWar.Helpers;
 using InsideTheWar.Managers;
 using InsideTheWar.Singletons;
 
@@ -15,24 +16,26 @@ public partial class PlayerInputHandler : Node2D
     {
         if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed)
         {
-            var mousePos = GetGlobalMousePosition();
+            var mousePosition = GetGlobalMousePosition();
+
             if (mouseEvent.ButtonIndex == MouseButton.Left)
             {
-                GD.Print("КЛИК ПОЛУЧЕН СИСТЕМОЙ");
-                GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "Player");
-
                 if (Input.IsKeyPressed(Key.Shift))
                 {
-                    _selectionManager.SelectSquad(mousePos);
+                    _selectionManager.SelectSquad(mousePosition);
                 }
                 else if (Input.IsKeyPressed(Key.Ctrl))
                 {
-                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePos, "AI");
+                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePosition, Constants.AIUnits);
+                }
+                else
+                {
+                    GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.RequestSpawn, mousePosition, Constants.PlayerUnits);
                 }
             }
             else if (mouseEvent.ButtonIndex == MouseButton.Right)
             {
-                _playerUnitManager.MoveSquadTo(mousePos);
+                _playerUnitManager.MoveSquadTo(mousePosition);
             }
         }
     }
