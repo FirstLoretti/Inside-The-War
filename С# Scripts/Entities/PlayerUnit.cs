@@ -5,6 +5,8 @@ namespace InsideTheWar.Entities;
 
 public partial class PlayerUnit : Unit
 {
+    [Export]
+    
     public bool IsSelected = false;
 
     public Vector2 LastSignaledPosition { get; set; }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Helpers;
@@ -12,9 +11,6 @@ public partial class Squad : Node2D
     public List<Unit> Units { get; set; } = [];
     public int ExpectedUnitsCount { get; set; }
     public IDebug Debug { get; set; }
-    public event Action<IUnit> TargetedByCharge;
-
-    private List<Unit> _enemyUnits = [];
 
     protected Unit _currentTarget;
 
@@ -44,17 +40,25 @@ public partial class Squad : Node2D
 
             GlobalSignals.Instance.EmitRequestSquadUnits(enemyUnit.SquadId, (enemyUnits) =>
             {
-                _enemyUnits.Clear();
-                _enemyUnits.AddRange(enemyUnits);
-                var enemyCenter = GameMath.CalculateSquadCenter(enemyUnits);
-                ChargeTarget(enemyCenter);
+                var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
+                ChargeTarget(enemySquadCenter);
+
+                foreach (var enemyUnit in enemyUnits)
+                {
+                    if (enemyUnit.CurrentState == UnitStates.Idle)
+                    {
+                        enemyUnit.BattleReady();
+                    }
+                }
             });
         }
     }
-    
-    public void ChargeTarget(Vector2 targetPosition)
+
+    public void ChargeTarget(Vector2 enemySquadCenter)
     {
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, targetPosition);
+        var directionToEnemy = (enemySquadCenter - GameMath.CalculateSquadCenter(Units)).Normalized();
+        var squadOffset = enemySquadCenter - directionToEnemy * Units[0].Stats.AttackDistance;
+        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, squadOffset);
 
         foreach (var pair in assigments)
         {
@@ -65,9 +69,5 @@ public partial class Squad : Node2D
 
             unit.Charge(target);
         }
-    }
-    protected void OnTargetedByCharge(IUnit unit)
-    {
-
     }
 }

@@ -1,4 +1,3 @@
-
 namespace InsideTheWar.Interfaces;
 
 public interface IDebug
