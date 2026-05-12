@@ -51,7 +51,7 @@ public partial class GridManager : Node2D, IGrid
         return true;
     }
 
-    private void OnEntitySpawned(ulong id, Vector2 currentPos)
+    private void OnEntitySpawned(ulong id, Vector2 currentPos, StringName unitsGroup)
     {
         var spawnCell = TargetCell(currentPos);
         _occupiedCells[spawnCell] = id;

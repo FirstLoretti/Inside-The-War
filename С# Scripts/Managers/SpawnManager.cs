@@ -50,7 +50,6 @@ public partial class SpawnManager : Node2D, ISpawner
 
     public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, string unitsGroup)
     {
-        GD.Print("1");
         int rows, cols, spacing;
 
         using (var dobby = unit.Instantiate<Unit>())
@@ -95,7 +94,8 @@ public partial class SpawnManager : Node2D, ISpawner
                 GlobalSignals.Instance.EmitSignal(
                     GlobalSignals.SignalName.EntitySpawned,
                     newUnit.GetInstanceId(),
-                    newUnit.GlobalPosition);
+                    newUnit.GlobalPosition,
+                    unitsGroup);
 
                 if (newUnit.IsInGroup(Constants.PlayerUnits)) //! Рефакторинг
                 {

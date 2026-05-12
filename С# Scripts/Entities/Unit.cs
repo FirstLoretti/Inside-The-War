@@ -4,6 +4,7 @@ using InsideTheWar.Data;
 using System.Collections.Generic;
 using InsideTheWar.Interfaces;
 using System.Linq;
+using System;
 
 namespace InsideTheWar.Entities;
 
@@ -12,8 +13,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     [ExportGroup("Stats")]
     [Export] protected BaseUnitData _stats;
     public BaseUnitData Stats => _stats;
-    //private int _health;
-    public int Health { get; set; }
+    private int _health;
 
     [ExportGroup("FormationSettings")]
     [Export] protected int _formationCols = 3;
@@ -44,6 +44,8 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     public const int MaxAttackers = 1;
     public StringName EnemyUnitsGroup { get; set; }
 
+    public event Action<Unit> Dying;
+
     protected static readonly StringName RunAnim = "Run";
     protected static readonly StringName IdleAnim = "Idle";
     protected static readonly StringName AttackAnim = "Attack";
@@ -53,10 +55,9 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     protected const float _updateFogTriggerDistance = 32.0f;
     protected const float _checkTimer = 0.1f;
     private const float _checkAllyRayMultiplicator = 3.0f;
-    protected Unit _currentAttackTarget;
 
+    private Unit _personalAttackTarget;
     private float _findPersonalTargetTimer;
-    private Unit _personalTarget; // Разобраться
 
     public override void _Ready()
     {
@@ -65,7 +66,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         CurrentState = UnitStates.WaitingOrder;
         AddToGroup(Constants.Debuggable);
         _animationPlayer.Play(IdleAnim);
-        Health = Stats.Health;
+        _health = Stats.Health;
     }
 
     public override void _Process(double delta)
@@ -153,11 +154,11 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
         if (CurrentState == UnitStates.Charging)
         {
-            _personalTarget = FindPersonalTargetInEnemySquad();
+            _personalAttackTarget = FindPersonalTargetInEnemySquad();
 
-            if (_personalTarget != null)
+            if (_personalAttackTarget != null)
             {
-                StartCombat(_personalTarget);
+                StartCombat(_personalAttackTarget);
             }
             else
             {
@@ -188,7 +189,6 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         TargetPosition = targetPosition;
         CurrentState = UnitStates.Charging;
         _animationPlayer.Play(RunAnim);
-
     }
 
     public void BattleReady()
@@ -200,14 +200,14 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     private void Attack(Unit targetUnit)
     {
-        if (_currentAttackTarget == targetUnit && CurrentState == UnitStates.Attacking) { return; }
+        if (_personalAttackTarget == targetUnit && CurrentState == UnitStates.Attacking) { return; }
 
         Velocity = Vector2.Zero;
-        _currentAttackTarget = targetUnit;
+        _personalAttackTarget = targetUnit;
         CurrentState = UnitStates.Attacking;
 
         _animationPlayer.Play(AttackAnim);
-        _sprite2D.FlipH = GlobalPosition.DirectionTo(_currentAttackTarget.GlobalPosition).X < Constants.Zero;
+        _sprite2D.FlipH = GlobalPosition.DirectionTo(_personalAttackTarget.GlobalPosition).X < Constants.Zero;
     }
     #endregion
 
@@ -219,10 +219,10 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     private void CheckForAttack(float delta)
     {
-        UpdateFindPersonalTargetTimer(delta);
-        if (_personalTarget != null)
+        UpdateFindPersonalTarget(delta);
+        if (_personalAttackTarget != null)
         {
-            StartCombat(_personalTarget);
+            StartCombat(_personalAttackTarget);
         }
     }
 
@@ -244,26 +244,61 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return null;
     }
 
-    private void UpdateFindPersonalTargetTimer(float delta)
+    private void UpdateFindPersonalTarget(float delta)
     {
         _findPersonalTargetTimer -= delta;
         if (_findPersonalTargetTimer <= Constants.Zero)
         {
-            _personalTarget = FindPersonalTargetInEnemySquad();
+            _personalAttackTarget = FindPersonalTargetInEnemySquad();
             _findPersonalTargetTimer = _checkTimer;
         }
     }
 
-    // In AnimationPlayer
-    public void DoDamage()
+    public void DoDamage() // Animation Event
     {
-        _personalTarget.Health -= (int)GameMath.GetRandomNumber(Stats.MinDamage, Stats.MaxDamage);
-        GD.Print(_personalTarget.Health);
+        var damage = (int)GameMath.GetRandomNumber(Stats.MinDamage, Stats.MaxDamage);
+        if (_personalAttackTarget.CurrentState == UnitStates.Dead || !IsInstanceValid(_personalAttackTarget))
+        {
+            OnTargetLost();
+            return;
+        }
+
+        _personalAttackTarget.TakeDamage(damage);
     }
 
     public void TakeDamage(int damage)
     {
-        Health -= damage;
+        _health -= damage;
+        if (_health <= 0)
+        {
+            OnDying();
+            Die();
+        }
+    }
+
+    public void OnTargetLost()
+    {
+        _personalAttackTarget = null;
+        CurrentState = UnitStates.Charging;
+    }
+
+    private void OnDying()
+    {
+        CurrentState = UnitStates.Dead;
+        foreach (var unit in UnitAttackers)
+        {
+            if (IsInstanceIdValid(unit.Id))
+            {
+                unit.OnTargetLost();
+                UnitAttackers.Clear();
+            }
+        }
+        Dying?.Invoke(this);
+    }
+
+    private void Die()
+    {
+        QueueFree();
     }
 
     public override void _Draw()

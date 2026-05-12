@@ -8,10 +8,8 @@ using System;
 
 namespace InsideTheWar.Managers;
 
-public partial class PlayerUnitManager : Node
+public partial class PlayerUnitManager : UnitManager
 {
-    private Dictionary<int, PlayerSquad> _squadsById = [];
-
     [ExportGroup("Nodes")]
     [Export] private Node2D _unitsContainer;
 
@@ -19,14 +17,13 @@ public partial class PlayerUnitManager : Node
     [Export] private float _minSquadMoveDistance = 50.0f;
 
     [ExportGroup("Managers")]
-    [Export] private GridManager _gridManager;
     [Export] private SelectionManager _selectionManager;
 
     private Vector2I _lastCell;
 
     public override void _Ready()
     {
-        GlobalSignals.Instance.EntitySpawned += OnUnitSpawn;
+        base._Ready();
         GlobalSignals.Instance.RequestSquadUnits += OnSquadUnitsRequest;
     }
 
@@ -64,23 +61,6 @@ public partial class PlayerUnitManager : Node
         }
     }
 
-    private void OnUnitSpawn(ulong id, Vector2 currentPosition)
-    {
-        var obj = InstanceFromId(id);
-
-        if (obj is PlayerUnit unit)
-        {
-            if (!_squadsById.ContainsKey(unit.SquadId))
-            {
-                PlayerSquad newSquad = new();
-                _squadsById[unit.SquadId] = newSquad;
-            }
-
-            var currentSquad = _squadsById[unit.SquadId];
-            currentSquad.Units.Add(unit);
-        }
-    }
-
     private void OnSquadUnitsRequest(int squadId, Action<List<Unit>> callback)
     {
         if (_squadsById.ContainsKey(squadId))
@@ -91,8 +71,7 @@ public partial class PlayerUnitManager : Node
 
     public override void _ExitTree()
     {
-        GlobalSignals.Instance.EntitySpawned -= OnUnitSpawn;
+        base._ExitTree();
         GlobalSignals.Instance.RequestSquadUnits -= OnSquadUnitsRequest;
-    }
-    
+    }    
 }

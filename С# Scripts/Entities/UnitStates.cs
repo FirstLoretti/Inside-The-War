@@ -7,6 +7,7 @@ public enum UnitStates
     WaitingOrder,
     Attacking,
     Charging,
-    BattleReady
+    BattleReady,
+    Dead
 }
 

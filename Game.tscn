@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://cjlrogr4qu7rw" path="res://С# Scripts/Managers/SelectionManager.cs" id="8_lvtmh"]
 [ext_resource type="PackedScene" uid="uid://dywccmq1yve7e" path="res://WarriorRed.tscn" id="9_cpsxm"]
 [ext_resource type="PackedScene" uid="uid://ccg4bq4knux3c" path="res://WarriorBlue.tscn" id="10_hmewc"]
+[ext_resource type="Script" uid="uid://wv8qs3ppniti" path="res://С# Scripts/Managers/UnitManager.cs" id="10_yyih5"]
 [ext_resource type="Script" uid="uid://bo0s42frjsx75" path="res://С# Scripts/Managers/DebugManager.cs" id="13_lvtmh"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_feb5d"]
@@ -86,12 +87,12 @@ sources/0 = SubResource("TileSetAtlasSource_80cx4")
 
 [node name="Game" type="Node2D" unique_id=341590171]
 
-[node name="LevelController" type="Node" parent="." unique_id=1892852066 node_paths=PackedStringArray("_gridManager", "_spawnManager", "_debugManager", "_aiUnitmanager")]
+[node name="LevelController" type="Node" parent="." unique_id=1892852066 node_paths=PackedStringArray("_gridManager", "_spawnManager", "_debugManager", "_unitManager")]
 script = ExtResource("1_gwjdr")
 _gridManager = NodePath("../Managers/GridManager")
 _spawnManager = NodePath("../Managers/SpawnManager")
 _debugManager = NodePath("../Managers/DebugManager")
-_aiUnitmanager = NodePath("../Managers/AIUnitManager")
+_unitManager = NodePath("../Managers/UnitManager")
 
 [node name="PlayerInputHandler" type="Node2D" parent="." unique_id=1653074186 node_paths=PackedStringArray("_selectionManager", "_spawnManager", "_playerUnitManager")]
 script = ExtResource("2_2vekm")
@@ -136,11 +137,13 @@ _aiUnits = NodePath("../../AIUnits")
 script = ExtResource("5_yx171")
 _mainMap = NodePath("../../TileMapLayers/MainMap")
 
-[node name="PlayerUnitManager" type="Node" parent="Managers" unique_id=2087029240 node_paths=PackedStringArray("_unitsContainer", "_gridManager", "_selectionManager")]
+[node name="UnitManager" type="Node" parent="Managers" unique_id=1755554247]
+script = ExtResource("10_yyih5")
+
+[node name="PlayerUnitManager" type="Node" parent="Managers" unique_id=2087029240 node_paths=PackedStringArray("_unitsContainer", "_selectionManager")]
 script = ExtResource("6_yhmtn")
 _unitsContainer = NodePath("../../PlayerUnits")
 _minSquadMoveDistance = 60.0
-_gridManager = NodePath("../GridManager")
 _selectionManager = NodePath("../SelectionManager")
 
 [node name="AIUnitManager" type="Node" parent="Managers" unique_id=871301421]

@@ -2,14 +2,13 @@ using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Interfaces;
-using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Entities;
 
 public partial class Squad : Node2D
 {
     public List<Unit> Units { get; set; } = [];
-    public int ExpectedUnitsCount { get; set; }
+    public int UnitsCount { get; set; }
     public IDebug Debug { get; set; }
 
     protected Unit _currentTarget;
@@ -26,32 +25,23 @@ public partial class Squad : Node2D
 
     public override void _Process(double delta)
     {
-        if (Debug.IsEnabled)
+        if (Debug?.IsEnabled == true)
         {
             QueueRedraw();
         }
     }
 
-    public void OnEnemySpotted(Node2D enemy)
+    public virtual void OnUnitDying(Unit unit)
     {
-        if (_currentTarget != null || enemy is not Unit enemyUnit) { return; }
-        {
-            _currentTarget = enemyUnit;
+        unit.Dying -= OnUnitDying;
+        UnitsCount -= 1;
+        Units.Remove(unit);
+    }
 
-            GlobalSignals.Instance.EmitRequestSquadUnits(enemyUnit.SquadId, (enemyUnits) =>
-            {
-                var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
-                ChargeTarget(enemySquadCenter);
-
-                foreach (var enemyUnit in enemyUnits)
-                {
-                    if (enemyUnit.CurrentState == UnitStates.Idle)
-                    {
-                        enemyUnit.BattleReady();
-                    }
-                }
-            });
-        }
+    public virtual void RegisterUnit(Unit unit)
+    {
+        Units.Add(unit);
+        unit.Dying += OnUnitDying;
     }
 
     public void ChargeTarget(Vector2 enemySquadCenter)

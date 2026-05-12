@@ -9,16 +9,16 @@ public partial class LevelController : Node
     [Export] private GridManager _gridManager;
     [Export] private SpawnManager _spawnManager;
     [Export] private DebugManager _debugManager;
-    [Export] private AIUnitManager _aiUnitmanager;
+    [Export] private UnitManager _unitManager;
 
     public override void _Ready()
     {
         GlobalSignals.Instance.RequestSpawn += OnRequestSpawn;
 
-        _spawnManager.Init(_gridManager, _debugManager);//! Check Init for null
+        _spawnManager.Init(_gridManager, _debugManager);
         _debugManager.Init(_spawnManager);
         _gridManager.Init(_debugManager);
-        _aiUnitmanager.Init(_debugManager);
+        _unitManager.Init(_debugManager);
     }
 
     public void OnRequestSpawn(Vector2 mousePos, StringName unitsGroup)
@@ -30,15 +30,15 @@ public partial class LevelController : Node
             return;
         }
 
-        if(unitsGroup == Constants.PlayerUnits)
+        if (unitsGroup == Constants.PlayerUnits)
         {
             _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, Constants.PlayerUnits);
         }
-        else if(unitsGroup == Constants.AIUnits)
+        else if (unitsGroup == Constants.AIUnits)
         {
             _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, Constants.AIUnits);
         }
-        
+
     }
 
     public override void _ExitTree()

@@ -17,7 +17,7 @@ public partial class GlobalSignals : Node
     [Signal]
     public delegate void EntityMovedEventHandler(ulong id, Vector2 oldPosition, Vector2 currentPosition, int fogVisionDistance);
     [Signal]
-    public delegate void EntitySpawnedEventHandler(ulong id, Vector2 currentPosition);
+    public delegate void EntitySpawnedEventHandler(ulong id, Vector2 currentPosition, StringName unitsGroup);
     //[Signal]
     //public delegate void AIUnitReadyEventHandler(AIUnit unit);
     [Signal]
