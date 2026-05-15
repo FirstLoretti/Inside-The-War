@@ -51,7 +51,7 @@ public partial class PlayerUnitManager : UnitManager
             return;
         }
 
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(selectedUnits, mousePosition);
+        var assigments = GameMath.CalculateUnitPositions(selectedUnits, mousePosition);
 
         foreach (var pair in assigments)
         {

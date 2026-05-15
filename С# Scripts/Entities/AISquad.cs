@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Data;
 using InsideTheWar.Helpers;
@@ -6,6 +7,17 @@ namespace InsideTheWar.Entities;
 
 public partial class AISquad : Squad
 {
+    private float _chargeUpdateInterval = 0.5f;
+    private float _chargeUpdateTimer;
+
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        var deltaFloat = (float)delta;
+
+        //TickChargeTimer(deltaFloat);
+    }
+
     public override void RegisterUnit(Unit unit)
     {
         base.RegisterUnit(unit);
@@ -30,29 +42,61 @@ public partial class AISquad : Squad
 
     public void OnEnemySpotted(Node2D enemy)
     {
-        if (_currentTarget != null || enemy is not Unit enemyUnit) { return; }
+        if (_currentTargetSquadId != -1 || enemy is not Unit enemyUnit) { return; }
+
+        _currentTargetSquadId = enemyUnit.SquadId;
+        _chargeUpdateTimer = _chargeUpdateInterval;
+        _centerAtBattleStart = GameMath.CalculateSquadCenter(Units);
+
+        TargetUpdateAndCharge();
+    }
+
+    private void TargetUpdateAndCharge()
+    {
+        GlobalSignals.Instance.EmitRequestSquadUnits(_currentTargetSquadId, (enemyUnits) =>
         {
-            _currentTarget = enemyUnit;
-
-            GlobalSignals.Instance.EmitRequestSquadUnits(enemyUnit.SquadId, (enemyUnits) =>
+            _chargeUpdateTimer = _chargeUpdateInterval;
+            if (enemyUnits.Count == 0)
             {
-                var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
-                ChargeTarget(enemySquadCenter);
+                _currentTargetSquadId = -1;
+                Idle();
+                return;
+            }
+            
+            _chargeUpdateTimer = _chargeUpdateInterval;
+            var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
+            _combatDirection = (enemySquadCenter - _centerAtBattleStart).Normalized();
+            Charge(enemySquadCenter);
+            WarnEnemyAboutAttack(enemyUnits);
+        });
+    }
 
-                foreach (var enemyUnit in enemyUnits)
-                {
-                    if (enemyUnit.CurrentState == UnitStates.Idle)
-                    {
-                        enemyUnit.BattleReady();
-                    }
-                }
-            });
+    private void TickChargeTimer(float delta)
+    {
+        if (_currentTargetSquadId == -1) { return; }
+
+        _chargeUpdateTimer -= delta;
+        if (_chargeUpdateTimer <= Constants.Zero)
+        {
+            TargetUpdateAndCharge();
+            _chargeUpdateTimer = _chargeUpdateInterval;
+        }
+    }
+
+    private void WarnEnemyAboutAttack(List<Unit> enemyUnits)
+    {
+        foreach (var enemyUnit in enemyUnits)
+        {
+            if (enemyUnit.CurrentState == UnitStates.Idle)
+            {
+                enemyUnit.BattleReady();
+            }
         }
     }
 
     public void OnUnitReady(AIUnit unit)
     {
-        if (Units.Count < UnitsCount) { return; } //! Сломается при убийстве
+        if (Units.Count < UnitsCount) { return; }
 
         foreach (var u in Units)
         {
@@ -64,7 +108,7 @@ public partial class AISquad : Squad
         var squadCenter = GameMath.CalculateSquadCenter(Units);
         var squadTargetPosition = GameMath.GetRandomPointInCircle(squadCenter, unit.MovementRadiusMin, unit.MovementRadiusMax);
 
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, squadTargetPosition);
+        var assigments = GameMath.CalculateUnitPositions(Units, squadTargetPosition);
 
         foreach (var pair in assigments)
         {

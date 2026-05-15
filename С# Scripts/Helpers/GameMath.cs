@@ -17,7 +17,7 @@ public static class GameMath
 
     public static float GetRandomNumber(float number1, float number2) => _rng.RandfRange(number1, number2);
 
-    public static Vector2 CalculateSquadOffset(int col, int row, int formationCols, int formationRows, int spacing)
+    public static Vector2 GetLocalPositionInFormation(int col, int row, int formationCols, int formationRows, int spacing)
     {
         float offsetX = (col - (formationCols - 1.0f) / 2.0f) * spacing;
         float offsetY = (row - (formationRows - 1.0f) / 2.0f) * spacing;
@@ -25,7 +25,7 @@ public static class GameMath
         return new Vector2(offsetX, offsetY);
     }
 
-    //! Combine logic with CalculateSquadOffset
+    //! Combine logic with GetLocalPositionInFormation
     public static (Vector2I centerCell, int cols, int rows) CalculateAreaAroundPosition(Vector2 position, Vector2 areaSize, int cellSize)
     {
         var topLeftPosition = position - areaSize / 2.0f;
@@ -112,7 +112,7 @@ public static class GameMath
             int col = i % FormationCols;
             int row = i / FormationCols;
 
-            var offset = CalculateSquadOffset
+            var offset = GetLocalPositionInFormation
             (col, row, FormationCols, FormationRows, FormationSpacing);
 
             points.Add(mousePos + offset);
@@ -121,32 +121,32 @@ public static class GameMath
         return points;
     }
 
-    public static Dictionary<IUnit, Vector2> AssignUnitsToPointsAlgorithm(IReadOnlyList<IUnit> units, Vector2 squadTargetPosition)
+    public static Dictionary<IUnit, Vector2> CalculateUnitPositions(IReadOnlyList<IUnit> units, Vector2 targetPos)
     {
-        Dictionary<IUnit, Vector2> assignments = new();
+        Dictionary<IUnit, Vector2> unitPositions = new();
 
-        var points = GenerateTargetPoints(squadTargetPosition, units.Count, units[0].FormationCols, units[0].FormationRows, units[0].FormationSpacing);
+        var leader = units[0];
+        List<Vector2> points = GenerateTargetPoints(targetPos, units.Count, leader.FormationCols, leader.FormationRows, leader.FormationSpacing);
 
         var squadCenter = CalculateSquadCenter(units.Cast<Node2D>());
-        var direction = (squadTargetPosition - squadCenter).Normalized();
-
-        Vector2 side = new(-direction.Y, direction.X);
+        var moveDir = (targetPos - squadCenter).Normalized();
+        Vector2 sideDir = new(-moveDir.Y, moveDir.X);
 
         var sortedUnits = units
-            .OrderBy(u => u.GlobalPosition.Dot(direction))
-            .ThenBy(u => u.GlobalPosition.Dot(side))
+            .OrderBy(u => u.GlobalPosition.Dot(moveDir))
+            .ThenBy(u => u.GlobalPosition.Dot(sideDir))
             .ToList();
         var sortedPoints = points
-            .OrderBy(p => p.Dot(direction))
-            .ThenBy(p => p.Dot(side))
+            .OrderBy(p => p.Dot(moveDir))
+            .ThenBy(p => p.Dot(sideDir))
             .ToList();
 
         for (int i = 0; i < sortedUnits.Count; i++)
         {
-            assignments.Add(sortedUnits[i], sortedPoints[i]);
+            unitPositions.Add(sortedUnits[i], sortedPoints[i]);
         }
 
-        return assignments;
+        return unitPositions;
     }
 
     public static Vector2 GetRandomPointInCircle(Vector2 center, float minRadius, float maxRadius)

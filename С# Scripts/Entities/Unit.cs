@@ -53,11 +53,14 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     protected const float _stoppingDistanceSqr = _stoppingDistance * _stoppingDistance;
     protected const float _arrivalDistance = 50.0f;
     protected const float _updateFogTriggerDistance = 32.0f;
-    protected const float _checkTimer = 0.1f;
+    protected const float _timer = 0.1f;
     private const float _checkAllyRayMultiplicator = 3.0f;
 
     private Unit _personalAttackTarget;
     private float _findPersonalTargetTimer;
+    private float _getFrontAllyTimer;
+    private float _checkAttackQueueTimer;
+    private Vector2 _lookDirection;
 
     public override void _Ready()
     {
@@ -67,18 +70,32 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         AddToGroup(Constants.Debuggable);
         _animationPlayer.Play(IdleAnim);
         _health = Stats.Health;
+        SetAttackAreaRadius();
     }
 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         if (Debug.IsEnabled)
         {
             QueueRedraw();
         }
 
-        if (CurrentState != UnitStates.Moving && CurrentState != UnitStates.Charging) { return; }
+        var deltaFloat = (float)delta;
 
-        UpdateMovement((float)delta, TargetPosition);
+        if (CurrentState != UnitStates.Moving &&
+            CurrentState != UnitStates.Charging &&
+            CurrentState != UnitStates.BattleReady)
+        {
+            return;
+        }
+
+        if (CurrentState == UnitStates.BattleReady)
+        {
+            TickCheckAttackQueueTimer(deltaFloat);
+            return;
+        }
+
+        UpdateMovement(deltaFloat, TargetPosition);
     }
     protected virtual void UpdateMovement(float delta, Vector2 targetPosition)
     {
@@ -88,24 +105,11 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
             if (CurrentState == UnitStates.Attacking) { return; }
 
-            var direction = (TargetPosition - GlobalPosition).Normalized();
-            var rayDistance = GlobalPosition + direction * (_formationSpacing * _checkAllyRayMultiplicator);
-            var spaceState = GetWorld2D().DirectSpaceState;
-            var ray = PhysicsRayQueryParameters2D.Create(GlobalPosition, rayDistance);
-            ray.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
-            ray.CollisionMask = 2;
-            var result = spaceState.IntersectRay(ray);
-            if (result.Count > 0)
+            var frontAlly = GetFrontAlly();
+            if (frontAlly?.CurrentState == UnitStates.Attacking || frontAlly?.CurrentState == UnitStates.BattleReady)
             {
-                var resultCollider = result["collider"].As<Node2D>();
-                if (resultCollider is Unit ally)
-                {
-                    if (ally.CurrentState == UnitStates.Attacking || ally.CurrentState == UnitStates.BattleReady)
-                    {
-                        BattleReady();
-                        return;
-                    }
-                }
+                BattleReady();
+                return;
             }
         }
 
@@ -130,6 +134,10 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         TargetPosition = targetPosition;
 
         var direction = GlobalPosition.DirectionTo(targetPosition);
+        if (direction != Vector2.Zero)
+        {
+            _lookDirection = direction;
+        }
         var speed = GameMath.CalculateSpeedInThisFrame(
             _stats.MaxSpeed,
             _stats.MinSpeed,
@@ -146,6 +154,55 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
         _animationPlayer.Play(RunAnim);
         _sprite2D.FlipH = direction.X < Constants.Zero;
+    }
+
+    private void TickCheckAttackQueueTimer(float delta)
+    {
+        _checkAttackQueueTimer -= delta;
+        if (_checkAttackQueueTimer <= Constants.Zero)
+        {
+            var frontAlly = GetFrontAlly();
+
+            if (frontAlly == null)
+            {
+                var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(TargetPosition);
+                if (distanceToTargetSqr > _stoppingDistanceSqr)
+                {
+                    Charge(TargetPosition);
+                }
+                else
+                {
+                    var enemy = FindPersonalTargetInEnemySquad();
+                    if (enemy != null)
+                    {
+                        StartCombat(enemy);
+                    }
+                }
+
+            }
+
+            _checkAttackQueueTimer = _timer;
+        }
+    }
+
+    public Unit GetFrontAlly()
+    {
+        var direction = (TargetPosition - GlobalPosition).Normalized();
+        var rayDistance = GlobalPosition + direction * (_formationSpacing * _checkAllyRayMultiplicator);
+        var spaceState = GetWorld2D().DirectSpaceState;
+        var ray = PhysicsRayQueryParameters2D.Create(GlobalPosition, rayDistance);
+        ray.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
+        ray.CollisionMask = 2;
+        var result = spaceState.IntersectRay(ray);
+        if (result.Count > 0)
+        {
+            var resultCollider = result["collider"].As<Node2D>();
+            if (resultCollider is Unit ally)
+            {
+                return ally;
+            }
+        }
+        return null;
     }
 
     private void OnReachDestination()
@@ -171,8 +228,15 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
     }
 
+    private void SetAttackAreaRadius()
+    {
+        var collisionShape = _attackDistanceArea.GetChild<CollisionShape2D>(0);
+        var circleShape = (CircleShape2D)collisionShape.Shape;
+        circleShape.Radius = Stats.AttackDistance;
+    }
+
     #region States
-    private void Idle()
+    public void Idle()
     {
         CurrentState = UnitStates.Idle;
         _animationPlayer.Play(IdleAnim);
@@ -219,7 +283,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     private void CheckForAttack(float delta)
     {
-        UpdateFindPersonalTarget(delta);
+        TickFindPersonalTargetTimer(delta);
         if (_personalAttackTarget != null)
         {
             StartCombat(_personalAttackTarget);
@@ -244,20 +308,20 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return null;
     }
 
-    private void UpdateFindPersonalTarget(float delta)
+    private void TickFindPersonalTargetTimer(float delta)
     {
         _findPersonalTargetTimer -= delta;
         if (_findPersonalTargetTimer <= Constants.Zero)
         {
             _personalAttackTarget = FindPersonalTargetInEnemySquad();
-            _findPersonalTargetTimer = _checkTimer;
+            _findPersonalTargetTimer = _timer;
         }
     }
 
     public void DoDamage() // Animation Event
     {
         var damage = (int)GameMath.GetRandomNumber(Stats.MinDamage, Stats.MaxDamage);
-        if (_personalAttackTarget.CurrentState == UnitStates.Dead || !IsInstanceValid(_personalAttackTarget))
+        if (!IsInstanceValid(_personalAttackTarget))
         {
             OnTargetLost();
             return;
@@ -279,7 +343,16 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     public void OnTargetLost()
     {
         _personalAttackTarget = null;
-        CurrentState = UnitStates.Charging;
+
+        var nextTarget = FindPersonalTargetInEnemySquad();
+        if (nextTarget != null)
+        {
+            StartCombat(nextTarget);
+            return;
+        }
+
+        var targetPosition = GlobalPosition + _lookDirection * FormationSpacing;
+        Charge(targetPosition);
     }
 
     private void OnDying()
@@ -290,9 +363,9 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             if (IsInstanceIdValid(unit.Id))
             {
                 unit.OnTargetLost();
-                UnitAttackers.Clear();
             }
         }
+        UnitAttackers.Clear();
         Dying?.Invoke(this);
     }
 
@@ -313,6 +386,5 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         DrawLine(Vector2.Zero, ToLocal(TargetPosition), movementLineColor, 4.0f);
         DrawLine(Vector2.Zero, rayDistance, Colors.Black with { A = 0.3f }, 16.0f);
     }
-
 }
 

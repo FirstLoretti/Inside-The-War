@@ -11,7 +11,9 @@ public partial class Squad : Node2D
     public int UnitsCount { get; set; }
     public IDebug Debug { get; set; }
 
-    protected Unit _currentTarget;
+    protected int _currentTargetSquadId = -1;
+    protected Vector2 _combatDirection;
+    protected Vector2 _centerAtBattleStart;
 
     public override void _Ready()
     {
@@ -44,20 +46,27 @@ public partial class Squad : Node2D
         unit.Dying += OnUnitDying;
     }
 
-    public void ChargeTarget(Vector2 enemySquadCenter)
+    protected void Idle()
     {
-        var directionToEnemy = (enemySquadCenter - GameMath.CalculateSquadCenter(Units)).Normalized();
-        var squadOffset = enemySquadCenter - directionToEnemy * Units[0].Stats.AttackDistance;
-        var assigments = GameMath.AssignUnitsToPointsAlgorithm(Units, squadOffset);
-
-        foreach (var pair in assigments)
+        foreach (var unit in Units)
         {
-            var unit = pair.Key as AIUnit;
-            var target = pair.Value;
+            unit.Idle();
+        }
+    }
 
-            if (unit.CurrentState == UnitStates.Attacking) continue;
+    public void Charge(Vector2 enemySquadCenter)
+    {    
+        var attackPoint = enemySquadCenter - _combatDirection * Units[0].Stats.AttackDistance;
+        var unitPositions = GameMath.CalculateUnitPositions(Units,attackPoint);
 
-            unit.Charge(target);
+        foreach (var pair in unitPositions)
+        {
+            var unit = pair.Key as Unit;
+            var targetPos = pair.Value;
+
+            if (unit.CurrentState == UnitStates.Attacking) { continue; }
+
+                unit.Charge(targetPos);
         }
     }
 }

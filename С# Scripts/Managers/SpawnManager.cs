@@ -86,7 +86,7 @@ public partial class SpawnManager : Node2D, ISpawner
                 }
                 newUnit.AddToGroup(unitsGroup);
 
-                var offset = GameMath.CalculateSquadOffset(col, row, newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
+                var offset = GameMath.GetLocalPositionInFormation(col, row, newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
                 newUnit.GlobalPosition = spawnPosition + offset;
 
                 parentNode.AddChild(newUnit);

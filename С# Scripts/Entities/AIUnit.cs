@@ -48,24 +48,34 @@ public partial class AIUnit : Unit
         base._Ready();
         MinIdleTime = AIStats.MaxIdleTime;
         MaxIdleTime = AIStats.MaxIdleTime;
-        var collisionShape = _visionArea.GetChild<CollisionShape2D>(0);
-        var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = ((AIUnitData)Stats).VisionDistance;
+        SetVisionAreaRadius();
     }
 
     public override void _Process(double delta)
     {
-        UpdateCheckForEnemiesTimer((float)delta);
+        if (CurrentState != UnitStates.Attacking &&
+            CurrentState != UnitStates.BattleReady &&
+            CurrentState != UnitStates.Charging)
+        {
+            TickCheckForEnemiesTimer((float)delta);
+        }
 
         if (CurrentState == UnitStates.Idle)
         {
-            UpdateIdleTimer((float)delta);
+            TickIdleTimer((float)delta);
         }
 
         base._Process(delta);
     }
 
-    private void CheckForEnemies()
+    private void SetVisionAreaRadius()
+    {
+        var collisionShape = _visionArea.GetChild<CollisionShape2D>(0);
+        var circleShape = (CircleShape2D)collisionShape.Shape;
+        circleShape.Radius = ((AIUnitData)Stats).VisionDistance;
+    }
+
+    private void CheckForEnemyInFOV()
     {
         var entities = _visionArea.GetOverlappingBodies();
 
@@ -79,18 +89,17 @@ public partial class AIUnit : Unit
         }
     }
 
-    private void UpdateCheckForEnemiesTimer(float delta)
+    private void TickCheckForEnemiesTimer(float delta)
     {
-        if (CurrentState == UnitStates.Attacking) { return; }
-
         _checkForEnemiesTimer -= delta;
         if (_checkForEnemiesTimer <= Constants.Zero)
         {
-            CheckForEnemies();
+            CheckForEnemyInFOV();
+            _checkForEnemiesTimer = _timer;
         }
     }
 
-    private void UpdateIdleTimer(float delta)
+    private void TickIdleTimer(float delta)
     {
         RandomIdleTime -= delta;
         if (RandomIdleTime <= Constants.Zero)
