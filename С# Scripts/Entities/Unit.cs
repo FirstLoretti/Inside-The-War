@@ -11,9 +11,14 @@ namespace InsideTheWar.Entities;
 public partial class Unit : CharacterBody2D, IUnit, IDamageable
 {
     [ExportGroup("Stats")]
-    [Export] protected BaseUnitData _stats;
-    public BaseUnitData Stats => _stats;
+    [Export] protected UnitData _stats;
     private int _health;
+    private int _maxAttackers;
+    public UnitData Stats => _stats;
+    public float MinSpeed => _stats.MinSpeed;
+    public float MaxSpeed => _stats.MaxSpeed;
+    public int Health => _health;
+    public int MaxAttackers => _maxAttackers;
 
     [ExportGroup("FormationSettings")]
     [Export] protected int _formationCols = 3;
@@ -33,16 +38,16 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     #endregion
 
     public virtual UnitStates CurrentState { get; protected set; }
-    public List<Unit> UnitAttackers = [];
-    public Vector2 TargetPosition { get; set; }
+    public List<IDamageable> Attackers => _combat.Attackers;
+    public void AddAttacker(IDamageable attacker) => _combat.AddAttacker(attacker);
     public int SquadId { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
     public ulong Id { get; set; }
-    public bool IsMoving => GlobalPosition.DistanceTo(TargetPosition) > _stoppingDistance;
+    public Vector2 MovementTargetPosition => _movement.TargetPosition;
+    public bool IsMoving => GlobalPosition.DistanceTo(MovementTargetPosition) > _stoppingDistance;
     public IDebug Debug { get; set; }
-    public const int MaxAttackers = 1;
-    public StringName EnemyUnitsGroup { get; set; }
+    public StringName EnemyGroup { get; set; }
 
     public event Action<Unit> Dying;
 
@@ -54,23 +59,24 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     protected const float _arrivalDistance = 50.0f;
     protected const float _updateFogTriggerDistance = 32.0f;
     protected const float _timer = 0.1f;
-    private const float _checkAllyRayMultiplicator = 3.0f;
+    protected const float _checkAllyRayMultiplicator = 3.0f;
 
-    private Unit _personalAttackTarget;
-    private float _findPersonalTargetTimer;
-    private float _getFrontAllyTimer;
+    private IDamageable _personalAttackTarget => _combat.PersonalTarget;
+    private MovementComponent _movement = new();
+    private CombatComponent _combat = new();
     private float _checkAttackQueueTimer;
-    private Vector2 _lookDirection;
 
     public override void _Ready()
     {
-        TargetPosition = GlobalPosition;
+        SetAttackAreaRadius();
+        AddMovementComponent();
+        AddCombatComponent();
+        AddToGroup(Constants.Debuggable);
         Id = GetInstanceId();
         CurrentState = UnitStates.WaitingOrder;
-        AddToGroup(Constants.Debuggable);
         _animationPlayer.Play(IdleAnim);
         _health = Stats.Health;
-        SetAttackAreaRadius();
+        _maxAttackers = Stats.MaxAttackers;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -91,30 +97,55 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
         if (CurrentState == UnitStates.BattleReady)
         {
-            TickCheckAttackQueueTimer(deltaFloat);
+            if (TickTryStartCombat(deltaFloat))
+            {
+                return;
+            }
+            TickAttackQueue(deltaFloat);
             return;
         }
 
-        UpdateMovement(deltaFloat, TargetPosition);
-    }
-    protected virtual void UpdateMovement(float delta, Vector2 targetPosition)
-    {
         if (CurrentState == UnitStates.Charging)
         {
-            CheckForAttack(delta);
-
-            if (CurrentState == UnitStates.Attacking) { return; }
-
-            var frontAlly = GetFrontAlly();
-            if (frontAlly?.CurrentState == UnitStates.Attacking || frontAlly?.CurrentState == UnitStates.BattleReady)
+            if (TickTryStartCombat(deltaFloat))
             {
-                BattleReady();
+                return;
+            }
+            if (IsFrontAllyOnCombat())
+            {
+                CurrentState = UnitStates.BattleReady;
                 return;
             }
         }
 
-        var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(targetPosition);
+        UpdateMovement(deltaFloat, MovementTargetPosition);
+    }
 
+    private bool TickTryStartCombat(float delta)
+    {
+        if (TickFindAndSetTarget(delta))
+        {
+            StartCombat(_personalAttackTarget);
+            return true;
+        }
+        return false;
+    }
+
+    private void AddMovementComponent()
+    {
+        AddChild(_movement);
+        _movement.Initialization(this, _sprite2D, _stats.MinSpeed, _stats.MaxSpeed, _arrivalDistance);
+    }
+
+    private void AddCombatComponent()
+    {
+        AddChild(_combat);
+        _combat.Initialization(this, _attackDistanceArea, EnemyGroup);
+    }
+
+    protected virtual void UpdateMovement(float delta, Vector2 targetPosition)
+    {
+        var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(targetPosition);
         if (distanceToTargetSqr <= _stoppingDistanceSqr)
         {
             OnReachDestination();
@@ -125,38 +156,39 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
     }
 
+    private bool IsFrontAllyOnCombat()
+    {
+        if (GetFrontAlly() is Unit ally)
+        {
+            if (ally.CurrentState == UnitStates.Attacking || ally.CurrentState == UnitStates.BattleReady)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private bool TickFindAndSetTarget(float delta)
+    {
+        var enemy = _combat.TickFindEnemy(delta);
+        if (_combat.TrySetPersonalTarget(enemy))
+        {
+            return true;
+        }
+        return false;
+    }
+
     public virtual void MoveTo(Vector2 targetPosition) //! Refactoring
     {
         if (CurrentState != UnitStates.Charging)
         {
             CurrentState = UnitStates.Moving;
         }
-        TargetPosition = targetPosition;
-
-        var direction = GlobalPosition.DirectionTo(targetPosition);
-        if (direction != Vector2.Zero)
-        {
-            _lookDirection = direction;
-        }
-        var speed = GameMath.CalculateSpeedInThisFrame(
-            _stats.MaxSpeed,
-            _stats.MinSpeed,
-            GlobalPosition.DistanceTo(targetPosition),
-            _arrivalDistance);
-
-        #region // IfAvoidanceOn
-        //var avoidance = GameMath.CalculateAvoidance(_avoidanceArea, this);
-        //Vector2 combinedDirection = (direction + avoidance * Stats.AvoidanceWeight).Normalized();
-        #endregion
-
-        Velocity = direction * speed;
-        MoveAndSlide();
-
+        _movement.MoveTo(targetPosition);
         _animationPlayer.Play(RunAnim);
-        _sprite2D.FlipH = direction.X < Constants.Zero;
     }
 
-    private void TickCheckAttackQueueTimer(float delta)
+    private void TickAttackQueue(float delta)
     {
         _checkAttackQueueTimer -= delta;
         if (_checkAttackQueueTimer <= Constants.Zero)
@@ -165,14 +197,14 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
             if (frontAlly == null)
             {
-                var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(TargetPosition);
+                var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(MovementTargetPosition);
                 if (distanceToTargetSqr > _stoppingDistanceSqr)
                 {
-                    Charge(TargetPosition);
+                    Charge(MovementTargetPosition);
                 }
                 else
                 {
-                    var enemy = FindPersonalTargetInEnemySquad();
+                    var enemy = _combat.FindNearestAvailibleEnemy();
                     if (enemy != null)
                     {
                         StartCombat(enemy);
@@ -185,24 +217,9 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
     }
 
-    public Unit GetFrontAlly()
+    public IUnit GetFrontAlly()
     {
-        var direction = (TargetPosition - GlobalPosition).Normalized();
-        var rayDistance = GlobalPosition + direction * (_formationSpacing * _checkAllyRayMultiplicator);
-        var spaceState = GetWorld2D().DirectSpaceState;
-        var ray = PhysicsRayQueryParameters2D.Create(GlobalPosition, rayDistance);
-        ray.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
-        ray.CollisionMask = 2;
-        var result = spaceState.IntersectRay(ray);
-        if (result.Count > 0)
-        {
-            var resultCollider = result["collider"].As<Node2D>();
-            if (resultCollider is Unit ally)
-            {
-                return ally;
-            }
-        }
-        return null;
+        return _combat.GetFrontAlly(MovementTargetPosition, _formationSpacing, _checkAllyRayMultiplicator);
     }
 
     private void OnReachDestination()
@@ -211,8 +228,8 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
         if (CurrentState == UnitStates.Charging)
         {
-            _personalAttackTarget = FindPersonalTargetInEnemySquad();
-
+            var enemy = _combat.FindNearestAvailibleEnemy();
+            _combat.TrySetPersonalTarget(enemy);
             if (_personalAttackTarget != null)
             {
                 StartCombat(_personalAttackTarget);
@@ -244,13 +261,13 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     private void Stop()
     {
-        GlobalPosition = TargetPosition;
+        GlobalPosition = MovementTargetPosition;
         Velocity = Vector2.Zero;
     }
 
     public void Charge(Vector2 targetPosition)
     {
-        TargetPosition = targetPosition;
+        _movement.MoveTo(targetPosition);
         CurrentState = UnitStates.Charging;
         _animationPlayer.Play(RunAnim);
     }
@@ -262,66 +279,40 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         _animationPlayer.Play(IdleAnim);
     }
 
-    private void Attack(Unit targetUnit)
+    private void Attack(IDamageable target)
     {
-        if (_personalAttackTarget == targetUnit && CurrentState == UnitStates.Attacking) { return; }
+        if (_personalAttackTarget == target && CurrentState == UnitStates.Attacking) { return; }
 
         Velocity = Vector2.Zero;
-        _personalAttackTarget = targetUnit;
         CurrentState = UnitStates.Attacking;
 
         _animationPlayer.Play(AttackAnim);
-        _sprite2D.FlipH = GlobalPosition.DirectionTo(_personalAttackTarget.GlobalPosition).X < Constants.Zero;
+        var direction = GlobalPosition.DirectionTo(target.GlobalPosition);
+        _movement.LookAt(direction);
     }
     #endregion
 
-    private void StartCombat(Unit targetUnit)
+    private void StartCombat(IDamageable target)
     {
-        Attack(targetUnit);
-        targetUnit.Attack(this);
+        Attack(target);
+        AddAttacker(target);
+        TargetCounterattack(target, this);
     }
 
-    private void CheckForAttack(float delta)
+    private void TargetCounterattack(IDamageable target, IDamageable attacker)
     {
-        TickFindPersonalTargetTimer(delta);
-        if (_personalAttackTarget != null)
+        if (target is Unit enemyUnit)
         {
-            StartCombat(_personalAttackTarget);
-        }
-    }
-
-    private Unit FindPersonalTargetInEnemySquad()
-    {
-        var enemyUnits = _attackDistanceArea.GetOverlappingBodies()
-            .OfType<Unit>()
-            .Where(t => t.IsInGroup(EnemyUnitsGroup))
-            .OrderBy(t => t.GlobalPosition.DistanceSquaredTo(GlobalPosition));
-
-        foreach (var enemy in enemyUnits)
-        {
-            if (enemy.UnitAttackers.Count < MaxAttackers)
-            {
-                enemy.UnitAttackers.Add(this);
-                return enemy;
-            }
-        }
-        return null;
-    }
-
-    private void TickFindPersonalTargetTimer(float delta)
-    {
-        _findPersonalTargetTimer -= delta;
-        if (_findPersonalTargetTimer <= Constants.Zero)
-        {
-            _personalAttackTarget = FindPersonalTargetInEnemySquad();
-            _findPersonalTargetTimer = _timer;
+            enemyUnit._combat.TrySetPersonalTarget(attacker);
+            enemyUnit.Attack(attacker);
+            enemyUnit.AddAttacker(attacker);
         }
     }
 
     public void DoDamage() // Animation Event
     {
         var damage = (int)GameMath.GetRandomNumber(Stats.MinDamage, Stats.MaxDamage);
-        if (!IsInstanceValid(_personalAttackTarget))
+        if (!IsInstanceValid((CollisionObject2D)_personalAttackTarget))
         {
             OnTargetLost();
             return;
@@ -342,30 +333,33 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     public void OnTargetLost()
     {
-        _personalAttackTarget = null;
+        _combat.ClearTarget();
 
-        var nextTarget = FindPersonalTargetInEnemySquad();
+        var nextTarget = _combat.FindNearestAvailibleEnemy();
         if (nextTarget != null)
         {
             StartCombat(nextTarget);
             return;
         }
 
-        var targetPosition = GlobalPosition + _lookDirection * FormationSpacing;
+        var targetPosition = GlobalPosition + _movement.LookDirection * FormationSpacing;
         Charge(targetPosition);
     }
 
     private void OnDying()
     {
         CurrentState = UnitStates.Dead;
-        foreach (var unit in UnitAttackers)
+        foreach (var attacker in Attackers)
         {
-            if (IsInstanceIdValid(unit.Id))
+            if (attacker is Unit unit)
             {
-                unit.OnTargetLost();
+                if (IsInstanceIdValid(unit.Id))
+                {
+                    unit.OnTargetLost();
+                }
             }
         }
-        UnitAttackers.Clear();
+        _combat.ClearAttackersList();
         Dying?.Invoke(this);
     }
 
@@ -379,12 +373,179 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         if (!Debug.IsEnabled) { return; }
 
         var movementLineColor = CurrentState == UnitStates.Moving ? Colors.Green : Colors.Blue;
-        var direction = (TargetPosition - GlobalPosition).Normalized();
+        var direction = (MovementTargetPosition - GlobalPosition).Normalized();
         var rayDistance = direction * (_formationSpacing * _checkAllyRayMultiplicator);
 
         DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Orange with { A = 0.5f });
-        DrawLine(Vector2.Zero, ToLocal(TargetPosition), movementLineColor, 4.0f);
+        DrawLine(Vector2.Zero, ToLocal(MovementTargetPosition), movementLineColor, 4.0f);
         DrawLine(Vector2.Zero, rayDistance, Colors.Black with { A = 0.3f }, 16.0f);
     }
 }
 
+public partial class MovementComponent : Node
+{
+    public Vector2 TargetPosition { get; private set; }
+    public Vector2 LookDirection { get; private set; }
+
+    private CharacterBody2D _body;
+    private Sprite2D _sprite;
+    private float _arrivalDistance;
+    private float _minSpeed;
+    private float _maxSpeed;
+
+    public void Initialization(
+        CharacterBody2D body,
+        Sprite2D sprite2D,
+        float minSpeed,
+        float maxSpeed,
+        float arrivalDistance
+    )
+    {
+        _body = body;
+        _sprite = sprite2D;
+        _minSpeed = minSpeed;
+        _maxSpeed = maxSpeed;
+        _arrivalDistance = arrivalDistance;
+        TargetPosition = _body.GlobalPosition;
+    }
+
+    public void MoveTo(Vector2 targetPosition)
+    {
+        TargetPosition = targetPosition;
+
+        var targetDirection = _body.GlobalPosition.DirectionTo(targetPosition);
+        var distanceToTarget = _body.GlobalPosition.DistanceTo(targetPosition);
+        var currentSpeed = GameMath.CalculateSpeedInThisFrame(
+            _minSpeed,
+            _maxSpeed,
+            distanceToTarget,
+            _arrivalDistance);
+        _body.Velocity = targetDirection * currentSpeed;
+        _body.MoveAndSlide();
+
+        LookAt(targetDirection);
+    }
+
+    public void Stop()
+    {
+        _body.GlobalPosition = TargetPosition;
+        _body.Velocity = Vector2.Zero;
+    }
+
+    public void LookAt(Vector2 targetDirection)
+    {
+        if (targetDirection != Vector2.Zero)
+        {
+            LookDirection = targetDirection;
+        }
+        _sprite.FlipH = LookDirection.X < Constants.Zero;
+    }
+}
+
+public partial class CombatComponent : Node
+{
+    public IDamageable PersonalTarget { get; private set; }
+    public List<IDamageable> Attackers { get; private set; } = [];
+
+    private CollisionObject2D _node;
+    private Area2D _attackDistance;
+    private StringName _enemyGroup;
+    private float _findEnemyTimer;
+    private readonly float _timer = 0.1f;
+
+    public void Initialization(
+        CollisionObject2D collisionObject2D,
+        Area2D attackDistance,
+        StringName enemyGroup
+    )
+    {
+        _node = collisionObject2D;
+        _attackDistance = attackDistance;
+        _enemyGroup = enemyGroup;
+    }
+
+    public IDamageable FindNearestAvailibleEnemy()
+    {
+        var enemies = _attackDistance.GetOverlappingBodies()
+        .OfType<IDamageable>()
+        .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
+        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition));
+
+        foreach (var enemy in enemies)
+        {
+            if (enemy.Attackers.Count < enemy.MaxAttackers)
+            {
+                return enemy;
+            }
+        }
+
+        return null;
+    }
+
+    public bool TrySetPersonalTarget(IDamageable enemy)
+    {
+        if (enemy != null)
+        {
+            PersonalTarget = enemy;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void ClearAttackersList()
+    {
+        Attackers.Clear();
+    }
+
+    public void AddAttacker(IDamageable attacker)
+    {
+        Attackers.Add(attacker);
+    }
+
+    public IDamageable TickFindEnemy(float delta)
+    {
+        _findEnemyTimer -= delta;
+        if (_findEnemyTimer <= Constants.Zero)
+        {
+            _findEnemyTimer = _timer;
+            var enemy = FindNearestAvailibleEnemy();
+            return enemy;
+        }
+        return null;
+    }
+
+    public void ClearTarget()
+    {
+        PersonalTarget = null;
+    }
+
+    public IUnit GetFrontAlly(Vector2 movementTargetPosition, float formationSpacing, float rayMultiplicator)
+    {
+        var direction = _node.GlobalPosition.DirectionTo(movementTargetPosition);
+        var rayDistance =
+            _node.GlobalPosition +
+            direction *
+            formationSpacing *
+            rayMultiplicator;
+        var spaceState = _node.GetWorld2D().DirectSpaceState;
+
+        var ray = PhysicsRayQueryParameters2D.Create(_node.GlobalPosition, rayDistance);
+        ray.Exclude = [_node.GetRid()];
+        ray.CollisionMask = _node.CollisionLayer;
+
+        var result = spaceState.IntersectRay(ray);
+        if (result.Count > Constants.Zero)
+        {
+            var collider = result["collider"].As<Node2D>();
+            if (collider is IUnit ally)
+            {
+                return ally;
+            }
+        }
+
+        return null;
+    }
+}

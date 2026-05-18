@@ -81,7 +81,7 @@ public partial class AIUnit : Unit
 
         foreach (var entity in entities)
         {
-            if (entity.IsInGroup(EnemyUnitsGroup))
+            if (entity.IsInGroup(EnemyGroup))
             {
                 EnemySpotted?.Invoke(entity);
             }

@@ -2,7 +2,7 @@ using Godot;
 
 namespace InsideTheWar.Data;
 
-public partial class AIUnitData : BaseUnitData
+public partial class AIUnitData : UnitData
 {
     [Export] private float _minIdleTime = 2.0f;
     [Export] private float _maxIdleTime = 6.0f;

@@ -108,11 +108,11 @@ public partial class SpawnManager : Node2D, ISpawner
                         newUnit.GlobalPosition,
                         newUnit.Stats.FogVisionDistance);
 
-                    newUnit.EnemyUnitsGroup = Constants.AIUnits;
+                    newUnit.EnemyGroup = Constants.AIUnits;
                 }
                 else
                 {
-                    newUnit.EnemyUnitsGroup = Constants.PlayerUnits;
+                    newUnit.EnemyGroup = Constants.PlayerUnits;
                 }
 
             }

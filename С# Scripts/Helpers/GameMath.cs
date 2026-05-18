@@ -68,7 +68,7 @@ public static class GameMath
         return squadCenter /= count;
     }
 
-    public static Vector2 CalculateAvoidance<T>(Area2D avoidanceArea, T currentUnit) where T : Unit
+    public static Vector2 CalculateAvoidance<T>(Area2D avoidanceArea, T currentUnit) where T : RigidBody2D
     {
         var avoidanceVector = Vector2.Zero;
         var neighbors = avoidanceArea.GetOverlappingBodies();
@@ -88,13 +88,13 @@ public static class GameMath
         return avoidanceVector;
     }
 
-    public static float CalculateSpeedInThisFrame(float maxSpeed, float minSpeed, float distanceTo, float arrivalDistance)
+    public static float CalculateSpeedInThisFrame(float minSpeed, float maxSpeed, float distanceToTarget, float arrivalDistance)
     {
         var speedInThisFrame = maxSpeed;
 
-        if (distanceTo < arrivalDistance)
+        if (distanceToTarget < arrivalDistance)
         {
-            speedInThisFrame = maxSpeed * (distanceTo / arrivalDistance);
+            speedInThisFrame = maxSpeed * (distanceToTarget / arrivalDistance);
         }
 
         speedInThisFrame = Mathf.Max(speedInThisFrame, minSpeed);
