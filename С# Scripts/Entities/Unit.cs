@@ -10,32 +10,16 @@ namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D, IUnit, IDamageable
 {
-    [ExportGroup("Stats")]
-    [Export] protected UnitData _stats;
-    private int _health;
-    private int _maxAttackers;
-    public UnitData Stats => _stats;
-    public float MinSpeed => _stats.MinSpeed;
-    public float MaxSpeed => _stats.MaxSpeed;
+    [Export] public UnitData Data { get; private set; }
+    [Export] public FormationData FormationData { get; private set; }
+    public int MaxAttackers => Data.MaxAttackers;
     public int Health => _health;
-    public int MaxAttackers => _maxAttackers;
-
-    [ExportGroup("FormationSettings")]
-    [Export] protected int _formationCols = 3;
-    [Export] protected int _formationRows = 3;
-    [Export] protected int _formationSpacing = 20;
-    public int FormationCols => _formationCols;
-    public int FormationRows => _formationRows;
-    public int FormationSpacing => _formationSpacing;
+    private int _health;
 
     [ExportGroup("Dependencies")]
-    [Export] protected Area2D _attackDistanceArea;
+    [Export] protected Area2D _attackDistance;
     [Export] protected AnimationPlayer _animationPlayer;
     [Export] protected Sprite2D _sprite2D;
-
-    #region // IfAvoidanceOn
-    //[Export] protected Area2D _avoidanceArea;
-    #endregion
 
     public virtual UnitStates CurrentState { get; protected set; }
     public List<IDamageable> Attackers => _combat.Attackers;
@@ -48,35 +32,33 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     public bool IsMoving => GlobalPosition.DistanceTo(MovementTargetPosition) > _stoppingDistance;
     public IDebug Debug { get; set; }
     public StringName EnemyGroup { get; set; }
+    public const float CheckAllyRayMultiplicator = 3.0f;
 
-    public event Action<Unit> Dying;
+    public event Action<Unit> Die;
 
-    protected static readonly StringName RunAnim = "Run";
-    protected static readonly StringName IdleAnim = "Idle";
-    protected static readonly StringName AttackAnim = "Attack";
+    protected static readonly StringName _runAnim = "Run";
+    protected static readonly StringName _idleAnim = "Idle";
+    protected static readonly StringName _attackAnim = "Attack";
     protected const float _stoppingDistance = 5.0f;
     protected const float _stoppingDistanceSqr = _stoppingDistance * _stoppingDistance;
     protected const float _arrivalDistance = 50.0f;
     protected const float _updateFogTriggerDistance = 32.0f;
     protected const float _timer = 0.1f;
-    protected const float _checkAllyRayMultiplicator = 3.0f;
 
     private IDamageable _personalAttackTarget => _combat.PersonalTarget;
     private MovementComponent _movement = new();
     private CombatComponent _combat = new();
+    private UnitDebuger _debuger = new();
     private float _checkAttackQueueTimer;
 
     public override void _Ready()
     {
-        SetAttackAreaRadius();
-        AddMovementComponent();
-        AddCombatComponent();
+        InitializeComponents();
         AddToGroup(Constants.Debuggable);
         Id = GetInstanceId();
         CurrentState = UnitStates.WaitingOrder;
-        _animationPlayer.Play(IdleAnim);
-        _health = Stats.Health;
-        _maxAttackers = Stats.MaxAttackers;
+        _animationPlayer.Play(_idleAnim);
+        _health = Data.Health;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -131,16 +113,30 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return false;
     }
 
+    private void AddDebuger()
+    {
+        AddChild(_debuger);
+        _debuger.Initialize(this);
+    }
+
     private void AddMovementComponent()
     {
         AddChild(_movement);
-        _movement.Initialization(this, _sprite2D, _stats.MinSpeed, _stats.MaxSpeed, _arrivalDistance);
+        _movement.Initialize(this, _sprite2D, Data.MinSpeed, Data.MaxSpeed, _arrivalDistance);
     }
 
     private void AddCombatComponent()
     {
         AddChild(_combat);
-        _combat.Initialization(this, _attackDistanceArea, EnemyGroup);
+        _combat.Initialize(this, _attackDistance, EnemyGroup);
+    }
+
+    private void InitializeComponents()
+    {
+        SetAttackDistance();
+        AddMovementComponent();
+        AddCombatComponent();
+        AddDebuger();
     }
 
     protected virtual void UpdateMovement(float delta, Vector2 targetPosition)
@@ -185,7 +181,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             CurrentState = UnitStates.Moving;
         }
         _movement.MoveTo(targetPosition);
-        _animationPlayer.Play(RunAnim);
+        _animationPlayer.Play(_runAnim);
     }
 
     private void TickAttackQueue(float delta)
@@ -219,7 +215,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     public IUnit GetFrontAlly()
     {
-        return _combat.GetFrontAlly(MovementTargetPosition, _formationSpacing, _checkAllyRayMultiplicator);
+        return _combat.GetFrontAlly(MovementTargetPosition, FormationData.Spacing, CheckAllyRayMultiplicator);
     }
 
     private void OnReachDestination()
@@ -245,18 +241,18 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
     }
 
-    private void SetAttackAreaRadius()
+    private void SetAttackDistance()
     {
-        var collisionShape = _attackDistanceArea.GetChild<CollisionShape2D>(0);
+        var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
         var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = Stats.AttackDistance;
+        circleShape.Radius = Data.AttackDistance;
     }
 
     #region States
     public void Idle()
     {
         CurrentState = UnitStates.Idle;
-        _animationPlayer.Play(IdleAnim);
+        _animationPlayer.Play(_idleAnim);
     }
 
     private void Stop()
@@ -269,14 +265,14 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     {
         _movement.MoveTo(targetPosition);
         CurrentState = UnitStates.Charging;
-        _animationPlayer.Play(RunAnim);
+        _animationPlayer.Play(_runAnim);
     }
 
     public void BattleReady()
     {
         Velocity = Vector2.Zero;
         CurrentState = UnitStates.BattleReady;
-        _animationPlayer.Play(IdleAnim);
+        _animationPlayer.Play(_idleAnim);
     }
 
     private void Attack(IDamageable target)
@@ -286,7 +282,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         Velocity = Vector2.Zero;
         CurrentState = UnitStates.Attacking;
 
-        _animationPlayer.Play(AttackAnim);
+        _animationPlayer.Play(_attackAnim);
         var direction = GlobalPosition.DirectionTo(target.GlobalPosition);
         _movement.LookAt(direction);
     }
@@ -311,7 +307,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     public void DoDamage() // Animation Event
     {
-        var damage = (int)GameMath.GetRandomNumber(Stats.MinDamage, Stats.MaxDamage);
+        var damage = (int)GameMath.GetRandomNumber(Data.MinDamage, Data.MaxDamage);
         if (!IsInstanceValid((CollisionObject2D)_personalAttackTarget))
         {
             OnTargetLost();
@@ -326,8 +322,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         _health -= damage;
         if (_health <= 0)
         {
-            OnDying();
-            Die();
+            Dying();
         }
     }
 
@@ -342,11 +337,11 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             return;
         }
 
-        var targetPosition = GlobalPosition + _movement.LookDirection * FormationSpacing;
+        var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
         Charge(targetPosition);
     }
 
-    private void OnDying()
+    private void Dying()
     {
         CurrentState = UnitStates.Dead;
         foreach (var attacker in Attackers)
@@ -360,25 +355,8 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             }
         }
         _combat.ClearAttackersList();
-        Dying?.Invoke(this);
-    }
-
-    private void Die()
-    {
+        Die?.Invoke(this);
         QueueFree();
-    }
-
-    public override void _Draw()
-    {
-        if (!Debug.IsEnabled) { return; }
-
-        var movementLineColor = CurrentState == UnitStates.Moving ? Colors.Green : Colors.Blue;
-        var direction = (MovementTargetPosition - GlobalPosition).Normalized();
-        var rayDistance = direction * (_formationSpacing * _checkAllyRayMultiplicator);
-
-        DrawCircle(Vector2.Zero, Stats.AttackDistance, Colors.Orange with { A = 0.5f });
-        DrawLine(Vector2.Zero, ToLocal(MovementTargetPosition), movementLineColor, 4.0f);
-        DrawLine(Vector2.Zero, rayDistance, Colors.Black with { A = 0.3f }, 16.0f);
     }
 }
 
@@ -393,7 +371,7 @@ public partial class MovementComponent : Node
     private float _minSpeed;
     private float _maxSpeed;
 
-    public void Initialization(
+    public void Initialize(
         CharacterBody2D body,
         Sprite2D sprite2D,
         float minSpeed,
@@ -453,7 +431,7 @@ public partial class CombatComponent : Node
     private float _findEnemyTimer;
     private readonly float _timer = 0.1f;
 
-    public void Initialization(
+    public void Initialize(
         CollisionObject2D collisionObject2D,
         Area2D attackDistance,
         StringName enemyGroup

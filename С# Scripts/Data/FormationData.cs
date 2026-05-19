@@ -1,8 +1,20 @@
+using Godot;
+
 namespace InsideTheWar.Data;
 
-public struct FormationData
+[GlobalClass]
+public partial class FormationData : Resource
 {
-    public int Cols { get; set; }
-    public int Rows { get; set; }
-    public int Spacing { get; set; }
+    [Export] public int Cols { get; private set; } = 4;
+    [Export] public int Rows { get; private set; } = 4;
+    [Export] public int Spacing { get; private set; } = 60;
+
+    public FormationData() { }
+
+    public FormationData(int cols, int rows, int spacing)
+    {
+        Cols = cols;
+        Rows = rows;
+        Spacing = spacing;
+    }
 }

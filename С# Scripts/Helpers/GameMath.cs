@@ -126,7 +126,8 @@ public static class GameMath
         Dictionary<IUnit, Vector2> unitPositions = new();
 
         var leader = units[0];
-        List<Vector2> points = GenerateTargetPoints(targetPos, units.Count, leader.FormationCols, leader.FormationRows, leader.FormationSpacing);
+        var formationData = leader.FormationData;
+        List<Vector2> points = GenerateTargetPoints(targetPos, units.Count, formationData.Cols, formationData.Rows, formationData.Spacing);
 
         var squadCenter = CalculateSquadCenter(units.Cast<Node2D>());
         var moveDir = (targetPos - squadCenter).Normalized();

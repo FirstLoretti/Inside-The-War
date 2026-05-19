@@ -37,7 +37,8 @@ public partial class UnitManager : Node
                 AddChild(newSquad);
 
                 _squadsById[unit.SquadId] = newSquad;
-                newSquad.UnitsCount = unit.FormationCols * unit.FormationRows;
+                var formationData = unit.FormationData;
+                newSquad.UnitsCount = formationData.Cols * formationData.Rows;
             }
 
             var currentSquad = _squadsById[unit.SquadId];

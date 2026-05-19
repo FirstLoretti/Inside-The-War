@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://ba46h8pgmt24b" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Run.png" id="2_vcivj"]
 [ext_resource type="Texture2D" uid="uid://bw1w85d4cfjm8" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Idle.png" id="2_y7hwp"]
 [ext_resource type="Texture2D" uid="uid://2x62txqs11od" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Attack1.png" id="3_0p4e8"]
+[ext_resource type="Resource" uid="uid://bf1guoccb1sgd" path="res://С# Scripts/Data/FormationData.tres" id="3_7dlj6"]
 
 [sub_resource type="Animation" id="Animation_7dlj6"]
 resource_name = "Attack"
@@ -173,9 +174,7 @@ collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_6cisj")
 _stats = ExtResource("2_cg44j")
-_formationCols = 4
-_formationRows = 4
-_formationSpacing = 60
+_formationData = ExtResource("3_7dlj6")
 _attackDistanceArea = NodePath("AttackArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")

@@ -4,10 +4,7 @@ namespace InsideTheWar.Data;
 
 public partial class AIUnitData : UnitData
 {
-    [Export] private float _minIdleTime = 2.0f;
-    [Export] private float _maxIdleTime = 6.0f;
-    [Export] private float _visionDistance = 200.0f;
-    public float VisionDistance => _visionDistance;
-    public float MinIdleTime => _minIdleTime;
-    public float MaxIdleTime => _maxIdleTime;
+    [Export] public float MinIdleTime { get; private set; } = 2.0f;
+    [Export] public float MaxIdleTime { get; private set; } = 6.0f;
+    [Export] public float VisionDistance { get; private set; } = 200.0f;
 }

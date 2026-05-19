@@ -7,7 +7,7 @@ namespace InsideTheWar.Entities;
 
 public partial class AIUnit : Unit
 {
-    [Export] private Area2D _visionArea;
+    [Export] private Area2D _visionDistance;
     [Export] private float _movementRadiusMin = 50.0f;
     [Export] private float _movementRadiusMax = 200.0f;
 
@@ -41,14 +41,14 @@ public partial class AIUnit : Unit
 
     private float _checkForEnemiesTimer;
 
-    private AIUnitData AIStats => (AIUnitData)Stats;
+    private AIUnitData AIData => (AIUnitData)Data;
 
     public override void _Ready()
     {
         base._Ready();
-        MinIdleTime = AIStats.MaxIdleTime;
-        MaxIdleTime = AIStats.MaxIdleTime;
-        SetVisionAreaRadius();
+        SetVisionDistance();
+        MinIdleTime = AIData.MaxIdleTime;
+        MaxIdleTime = AIData.MaxIdleTime;
     }
 
     public override void _Process(double delta)
@@ -68,16 +68,16 @@ public partial class AIUnit : Unit
         base._Process(delta);
     }
 
-    private void SetVisionAreaRadius()
+    private void SetVisionDistance()
     {
-        var collisionShape = _visionArea.GetChild<CollisionShape2D>(0);
+        var collisionShape = _visionDistance.GetChild<CollisionShape2D>(0);
         var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = ((AIUnitData)Stats).VisionDistance;
+        circleShape.Radius = AIData.VisionDistance;
     }
 
     private void CheckForEnemyInFOV()
     {
-        var entities = _visionArea.GetOverlappingBodies();
+        var entities = _visionDistance.GetOverlappingBodies();
 
         foreach (var entity in entities)
         {

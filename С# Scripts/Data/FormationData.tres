@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="FormationData" format=3 uid="uid://bf1guoccb1sgd"]
+
+[ext_resource type="Script" uid="uid://bakjhgxsymxi6" path="res://С# Scripts/Data/FormationData.cs" id="1_j68nv"]
+
+[resource]
+script = ExtResource("1_j68nv")
+Cols = 4
+Rows = 4
+Spacing = 60
+metadata/_custom_type_script = "uid://bakjhgxsymxi6"

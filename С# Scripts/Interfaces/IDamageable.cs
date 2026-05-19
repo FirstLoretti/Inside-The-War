@@ -10,6 +10,6 @@ public interface IDamageable
     public List<IDamageable> Attackers { get; }
     public Vector2 GlobalPosition { get; }
     public int Health { get; }
-    public int MaxAttackers { get; }
+    public int MaxAttackers {get;}
 }
 

@@ -33,17 +33,17 @@ public partial class Squad : Node2D
         }
     }
 
-    public virtual void OnUnitDying(Unit unit)
+    public virtual void OnUnitDie(Unit unit)
     {
-        unit.Dying -= OnUnitDying;
         UnitsCount -= 1;
+        unit.Die -= OnUnitDie;
         Units.Remove(unit);
     }
 
     public virtual void RegisterUnit(Unit unit)
     {
         Units.Add(unit);
-        unit.Dying += OnUnitDying;
+        unit.Die += OnUnitDie;
     }
 
     protected void Idle()
@@ -55,9 +55,10 @@ public partial class Squad : Node2D
     }
 
     public void Charge(Vector2 enemySquadCenter)
-    {    
-        var attackPoint = enemySquadCenter - _combatDirection * Units[0].Stats.AttackDistance;
-        var unitPositions = GameMath.CalculateUnitPositions(Units,attackPoint);
+    {
+        var leaderData = Units[0].Data;
+        var attackPoint = enemySquadCenter - _combatDirection * leaderData.AttackDistance;
+        var unitPositions = GameMath.CalculateUnitPositions(Units, attackPoint);
 
         foreach (var pair in unitPositions)
         {
@@ -66,7 +67,7 @@ public partial class Squad : Node2D
 
             if (unit.CurrentState == UnitStates.Attacking) { continue; }
 
-                unit.Charge(targetPos);
+            unit.Charge(targetPos);
         }
     }
 }

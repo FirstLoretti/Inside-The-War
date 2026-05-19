@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://duo7xx32a3pft" path="res://С# Scripts/Entities/AIUnit.cs" id="1_uk2px"]
 [ext_resource type="Texture2D" uid="uid://ciyseg31jxtm" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Run.png" id="2_nu1rs"]
 [ext_resource type="Resource" uid="uid://cnd6j0fk5c42k" path="res://С# Scripts/Data/FrenchKnight.tres" id="2_rxecv"]
+[ext_resource type="Resource" uid="uid://bf1guoccb1sgd" path="res://С# Scripts/Data/FormationData.tres" id="3_1tjhy"]
 [ext_resource type="Texture2D" uid="uid://fmjexg52chj4" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Idle.png" id="3_akxnc"]
 [ext_resource type="Texture2D" uid="uid://ju2bmt2nq5d0" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Attack1.png" id="3_rxecv"]
 
@@ -211,9 +212,7 @@ motion_mode = 1
 script = ExtResource("1_uk2px")
 _visionArea = NodePath("VisionArea2D")
 _stats = ExtResource("2_rxecv")
-_formationCols = 4
-_formationRows = 4
-_formationSpacing = 60
+_formationData = ExtResource("3_1tjhy")
 _attackDistanceArea = NodePath("AttackArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")

@@ -26,7 +26,7 @@ public partial class PlayerUnit : Unit
         if (GlobalPosition.DistanceTo(LastSignaledPosition) > _updateFogTriggerDistance)
         {
             GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-            GetInstanceId(), LastSignaledPosition, GlobalPosition, Stats.FogVisionDistance);
+            GetInstanceId(), LastSignaledPosition, GlobalPosition, Data.FogVisionDistance);
 
             LastSignaledPosition = GlobalPosition;
         }

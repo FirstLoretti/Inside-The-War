@@ -37,8 +37,9 @@ public partial class SpawnManager : Node2D, ISpawner
 
         using (var dobby = UnitEngland.Instantiate<Unit>()) //! Need refactor
         {
-            _squadColsAndRows = new Vector2I(dobby.FormationCols, dobby.FormationRows);
-            _formationSpacing = dobby.FormationSpacing;
+            var formationData = dobby.FormationData;
+            _squadColsAndRows = new Vector2I(formationData.Cols, formationData.Rows);
+            _formationSpacing = formationData.Spacing;
         }
     }
 
@@ -54,9 +55,10 @@ public partial class SpawnManager : Node2D, ISpawner
 
         using (var dobby = unit.Instantiate<Unit>())
         {
-            rows = dobby.FormationRows;
-            cols = dobby.FormationCols;
-            spacing = dobby.FormationSpacing;
+            var formationData = dobby.FormationData;
+            rows = formationData.Rows;
+            cols = formationData.Cols;
+            spacing = formationData.Spacing;
         }
 
         Vector2 squadAreaSize = new(cols * spacing, rows * spacing);
@@ -85,8 +87,8 @@ public partial class SpawnManager : Node2D, ISpawner
                     newUnit.Debug = _debug;
                 }
                 newUnit.AddToGroup(unitsGroup);
-
-                var offset = GameMath.GetLocalPositionInFormation(col, row, newUnit.FormationCols, newUnit.FormationRows, newUnit.FormationSpacing);
+                var formationData = newUnit.FormationData;
+                var offset = GameMath.GetLocalPositionInFormation(col, row, formationData.Cols, formationData.Rows, formationData.Spacing);
                 newUnit.GlobalPosition = spawnPosition + offset;
 
                 parentNode.AddChild(newUnit);
@@ -106,7 +108,7 @@ public partial class SpawnManager : Node2D, ISpawner
                         newUnit.GetInstanceId(),
                         u.LastSignaledPosition,
                         newUnit.GlobalPosition,
-                        newUnit.Stats.FogVisionDistance);
+                        newUnit.Data.FogVisionDistance);
 
                     newUnit.EnemyGroup = Constants.AIUnits;
                 }
