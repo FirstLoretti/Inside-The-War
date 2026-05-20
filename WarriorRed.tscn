@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dywccmq1yve7e"]
 
 [ext_resource type="Script" uid="uid://dly2fmfpambtb" path="res://С# Scripts/Entities/PlayerUnit.cs" id="1_6cisj"]
-[ext_resource type="Resource" uid="uid://bm6uap7fcmnmo" path="res://С# Scripts/Data/EnglandKnight.tres" id="2_cg44j"]
+[ext_resource type="Resource" uid="uid://cteal6hqkh3pd" path="res://С# Scripts/Data/PlayerKnights.tres" id="2_7dlj6"]
 [ext_resource type="Texture2D" uid="uid://ba46h8pgmt24b" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Run.png" id="2_vcivj"]
 [ext_resource type="Texture2D" uid="uid://bw1w85d4cfjm8" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Idle.png" id="2_y7hwp"]
 [ext_resource type="Texture2D" uid="uid://2x62txqs11od" path="res://Assets/TinySwords/Units/Red Units/Warrior/Warrior_Attack1.png" id="3_0p4e8"]
@@ -161,21 +161,18 @@ height = 84.99999
 [sub_resource type="CircleShape2D" id="CircleShape2D_7dlj6"]
 radius = 52.499996
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_cg44j"]
-radius = 200.0
-
 [sub_resource type="CircleShape2D" id="CircleShape2D_0p4e8"]
 radius = 60.0
 
-[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_attackDistanceArea", "_animationPlayer", "_sprite2D")]
+[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_attackDistance", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_6cisj")
-_stats = ExtResource("2_cg44j")
-_formationData = ExtResource("3_7dlj6")
-_attackDistanceArea = NodePath("AttackArea2D")
+Data = ExtResource("2_7dlj6")
+FormationData = ExtResource("3_7dlj6")
+_attackDistance = NodePath("AttackArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")
 
@@ -183,7 +180,6 @@ _sprite2D = NodePath("Sprite2D")
 position = Vector2(5.9604645e-08, -24.999996)
 texture = ExtResource("3_0p4e8")
 hframes = 4
-frame = 3
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=836985193]
 libraries/ = SubResource("AnimationLibrary_t7o5p")
@@ -198,14 +194,6 @@ position = Vector2(0, -27.499998)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="AvoidanceArea2D" unique_id=1547266469]
 shape = SubResource("CircleShape2D_7dlj6")
-
-[node name="VisionArea2D" type="Area2D" parent="." unique_id=1333120754]
-position = Vector2(0, -27.499998)
-collision_layer = 0
-collision_mask = 2
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea2D" unique_id=1028690569]
-shape = SubResource("CircleShape2D_cg44j")
 
 [node name="AttackArea2D" type="Area2D" parent="." unique_id=1490166771]
 position = Vector2(0, -27.499998)

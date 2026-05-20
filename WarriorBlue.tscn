@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://duo7xx32a3pft" path="res://С# Scripts/Entities/AIUnit.cs" id="1_uk2px"]
 [ext_resource type="Texture2D" uid="uid://ciyseg31jxtm" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Run.png" id="2_nu1rs"]
-[ext_resource type="Resource" uid="uid://cnd6j0fk5c42k" path="res://С# Scripts/Data/FrenchKnight.tres" id="2_rxecv"]
+[ext_resource type="Resource" uid="uid://cnd6j0fk5c42k" path="res://С# Scripts/Data/AIKnight.tres" id="2_rxecv"]
 [ext_resource type="Resource" uid="uid://bf1guoccb1sgd" path="res://С# Scripts/Data/FormationData.tres" id="3_1tjhy"]
 [ext_resource type="Texture2D" uid="uid://fmjexg52chj4" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Idle.png" id="3_akxnc"]
 [ext_resource type="Texture2D" uid="uid://ju2bmt2nq5d0" path="res://Assets/TinySwords/Units/Blue Units/Warrior/Warrior_Attack1.png" id="3_rxecv"]
@@ -203,17 +203,17 @@ radius = 300.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_1tjhy"]
 radius = 60.0
 
-[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_visionArea", "_attackDistanceArea", "_animationPlayer", "_sprite2D")]
+[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_visionDistance", "_attackDistance", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 collision_layer = 2
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_uk2px")
-_visionArea = NodePath("VisionArea2D")
-_stats = ExtResource("2_rxecv")
-_formationData = ExtResource("3_1tjhy")
-_attackDistanceArea = NodePath("AttackArea2D")
+_visionDistance = NodePath("VisionArea2D")
+Data = ExtResource("2_rxecv")
+FormationData = ExtResource("3_1tjhy")
+_attackDistance = NodePath("AttackArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")
 

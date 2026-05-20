@@ -50,7 +50,7 @@ public partial class Squad : Node2D
     {
         foreach (var unit in Units)
         {
-            unit.Idle();
+            unit.SetState(UnitStates.Idle);
         }
     }
 
@@ -67,7 +67,7 @@ public partial class Squad : Node2D
 
             if (unit.CurrentState == UnitStates.Attacking) { continue; }
 
-            unit.Charge(targetPos);
+            unit.SetState(UnitStates.Charging, targetPos);
         }
     }
 }

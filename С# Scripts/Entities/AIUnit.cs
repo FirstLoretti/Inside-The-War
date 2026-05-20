@@ -57,12 +57,12 @@ public partial class AIUnit : Unit
             CurrentState != UnitStates.BattleReady &&
             CurrentState != UnitStates.Charging)
         {
-            TickCheckForEnemiesTimer((float)delta);
+            TickCheckForEnemiesInFOV((float)delta);
         }
 
         if (CurrentState == UnitStates.Idle)
         {
-            TickIdleTimer((float)delta);
+            TickIdling((float)delta);
         }
 
         base._Process(delta);
@@ -89,7 +89,7 @@ public partial class AIUnit : Unit
         }
     }
 
-    private void TickCheckForEnemiesTimer(float delta)
+    private void TickCheckForEnemiesInFOV(float delta)
     {
         _checkForEnemiesTimer -= delta;
         if (_checkForEnemiesTimer <= Constants.Zero)
@@ -99,7 +99,7 @@ public partial class AIUnit : Unit
         }
     }
 
-    private void TickIdleTimer(float delta)
+    private void TickIdling(float delta)
     {
         RandomIdleTime -= delta;
         if (RandomIdleTime <= Constants.Zero)

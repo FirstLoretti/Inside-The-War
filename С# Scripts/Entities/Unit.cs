@@ -1,108 +1,12 @@
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Data;
-using System.Collections.Generic;
 using InsideTheWar.Interfaces;
-using System.Linq;
-using System;
 
 namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D, IUnit, IDamageable
 {
-    [Export] public UnitData Data { get; private set; }
-    [Export] public FormationData FormationData { get; private set; }
-    public int MaxAttackers => Data.MaxAttackers;
-    public int Health => _health;
-    private int _health;
-
-    [ExportGroup("Dependencies")]
-    [Export] protected Area2D _attackDistance;
-    [Export] protected AnimationPlayer _animationPlayer;
-    [Export] protected Sprite2D _sprite2D;
-
-    public virtual UnitStates CurrentState { get; protected set; }
-    public List<IDamageable> Attackers => _combat.Attackers;
-    public void AddAttacker(IDamageable attacker) => _combat.AddAttacker(attacker);
-    public int SquadId { get; set; }
-    public int Row { get; set; }
-    public int Col { get; set; }
-    public ulong Id { get; set; }
-    public Vector2 MovementTargetPosition => _movement.TargetPosition;
-    public bool IsMoving => GlobalPosition.DistanceTo(MovementTargetPosition) > _stoppingDistance;
-    public IDebug Debug { get; set; }
-    public StringName EnemyGroup { get; set; }
-    public const float CheckAllyRayMultiplicator = 3.0f;
-
-    public event Action<Unit> Die;
-
-    protected static readonly StringName _runAnim = "Run";
-    protected static readonly StringName _idleAnim = "Idle";
-    protected static readonly StringName _attackAnim = "Attack";
-    protected const float _stoppingDistance = 5.0f;
-    protected const float _stoppingDistanceSqr = _stoppingDistance * _stoppingDistance;
-    protected const float _arrivalDistance = 50.0f;
-    protected const float _updateFogTriggerDistance = 32.0f;
-    protected const float _timer = 0.1f;
-
-    private IDamageable _personalAttackTarget => _combat.PersonalTarget;
-    private MovementComponent _movement = new();
-    private CombatComponent _combat = new();
-    private UnitDebuger _debuger = new();
-    private float _checkAttackQueueTimer;
-
-    public override void _Ready()
-    {
-        InitializeComponents();
-        AddToGroup(Constants.Debuggable);
-        Id = GetInstanceId();
-        CurrentState = UnitStates.WaitingOrder;
-        _animationPlayer.Play(_idleAnim);
-        _health = Data.Health;
-    }
-
-    public override void _PhysicsProcess(double delta)
-    {
-        if (Debug.IsEnabled)
-        {
-            QueueRedraw();
-        }
-
-        var deltaFloat = (float)delta;
-
-        if (CurrentState != UnitStates.Moving &&
-            CurrentState != UnitStates.Charging &&
-            CurrentState != UnitStates.BattleReady)
-        {
-            return;
-        }
-
-        if (CurrentState == UnitStates.BattleReady)
-        {
-            if (TickTryStartCombat(deltaFloat))
-            {
-                return;
-            }
-            TickAttackQueue(deltaFloat);
-            return;
-        }
-
-        if (CurrentState == UnitStates.Charging)
-        {
-            if (TickTryStartCombat(deltaFloat))
-            {
-                return;
-            }
-            if (IsFrontAllyOnCombat())
-            {
-                CurrentState = UnitStates.BattleReady;
-                return;
-            }
-        }
-
-        UpdateMovement(deltaFloat, MovementTargetPosition);
-    }
-
     private bool TickTryStartCombat(float delta)
     {
         if (TickFindAndSetTarget(delta))
@@ -113,55 +17,44 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return false;
     }
 
-    private void AddDebuger()
+    public void SetState(UnitStates unitState, Vector2? target = null)
     {
-        AddChild(_debuger);
-        _debuger.Initialize(this);
-    }
+        CurrentState = unitState;
+        Velocity = Vector2.Zero;
 
-    private void AddMovementComponent()
-    {
-        AddChild(_movement);
-        _movement.Initialize(this, _sprite2D, Data.MinSpeed, Data.MaxSpeed, _arrivalDistance);
-    }
-
-    private void AddCombatComponent()
-    {
-        AddChild(_combat);
-        _combat.Initialize(this, _attackDistance, EnemyGroup);
-    }
-
-    private void InitializeComponents()
-    {
-        SetAttackDistance();
-        AddMovementComponent();
-        AddCombatComponent();
-        AddDebuger();
-    }
-
-    protected virtual void UpdateMovement(float delta, Vector2 targetPosition)
-    {
-        var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(targetPosition);
-        if (distanceToTargetSqr <= _stoppingDistanceSqr)
+        switch (unitState)
         {
-            OnReachDestination();
+            case UnitStates.Idle:
+                _animationPlayer.Play(_idleAnimation);
+                break;
+            case UnitStates.BattleReady:
+                _animationPlayer.Play(_idleAnimation);
+                break;
+            case UnitStates.WaitingOrder:
+                _animationPlayer.Play(_idleAnimation);
+                break;
+            case UnitStates.Moving:
+                if (target.HasValue)
+                {
+                    _movement.MoveTo(target.Value);
+                    _animationPlayer.Play(_runAnimation);
+                }
+                break;
+            case UnitStates.Charging:
+                if (target.HasValue)
+                {
+                    _movement.MoveTo(target.Value);
+                    _animationPlayer.Play(_runAnimation);
+                }
+                break;
+            case UnitStates.Attacking:
+                if (target.HasValue)
+                {
+                    _movement.LookAt(target.Value);
+                    _animationPlayer.Play(_attackAnimation);
+                }
+                break;
         }
-        else
-        {
-            MoveTo(targetPosition);
-        }
-    }
-
-    private bool IsFrontAllyOnCombat()
-    {
-        if (GetFrontAlly() is Unit ally)
-        {
-            if (ally.CurrentState == UnitStates.Attacking || ally.CurrentState == UnitStates.BattleReady)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private bool TickFindAndSetTarget(float delta)
@@ -174,124 +67,17 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return false;
     }
 
-    public virtual void MoveTo(Vector2 targetPosition) //! Refactoring
-    {
-        if (CurrentState != UnitStates.Charging)
-        {
-            CurrentState = UnitStates.Moving;
-        }
-        _movement.MoveTo(targetPosition);
-        _animationPlayer.Play(_runAnim);
-    }
-
-    private void TickAttackQueue(float delta)
-    {
-        _checkAttackQueueTimer -= delta;
-        if (_checkAttackQueueTimer <= Constants.Zero)
-        {
-            var frontAlly = GetFrontAlly();
-
-            if (frontAlly == null)
-            {
-                var distanceToTargetSqr = GlobalPosition.DistanceSquaredTo(MovementTargetPosition);
-                if (distanceToTargetSqr > _stoppingDistanceSqr)
-                {
-                    Charge(MovementTargetPosition);
-                }
-                else
-                {
-                    var enemy = _combat.FindNearestAvailibleEnemy();
-                    if (enemy != null)
-                    {
-                        StartCombat(enemy);
-                    }
-                }
-
-            }
-
-            _checkAttackQueueTimer = _timer;
-        }
-    }
-
-    public IUnit GetFrontAlly()
-    {
-        return _combat.GetFrontAlly(MovementTargetPosition, FormationData.Spacing, CheckAllyRayMultiplicator);
-    }
-
-    private void OnReachDestination()
-    {
-        Stop();
-
-        if (CurrentState == UnitStates.Charging)
-        {
-            var enemy = _combat.FindNearestAvailibleEnemy();
-            _combat.TrySetPersonalTarget(enemy);
-            if (_personalAttackTarget != null)
-            {
-                StartCombat(_personalAttackTarget);
-            }
-            else
-            {
-                BattleReady();
-            }
-        }
-        else
-        {
-            Idle();
-        }
-    }
-
-    private void SetAttackDistance()
-    {
-        var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
-        var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = Data.AttackDistance;
-    }
-
-    #region States
-    public void Idle()
-    {
-        CurrentState = UnitStates.Idle;
-        _animationPlayer.Play(_idleAnim);
-    }
-
-    private void Stop()
-    {
-        GlobalPosition = MovementTargetPosition;
-        Velocity = Vector2.Zero;
-    }
-
-    public void Charge(Vector2 targetPosition)
-    {
-        _movement.MoveTo(targetPosition);
-        CurrentState = UnitStates.Charging;
-        _animationPlayer.Play(_runAnim);
-    }
-
-    public void BattleReady()
-    {
-        Velocity = Vector2.Zero;
-        CurrentState = UnitStates.BattleReady;
-        _animationPlayer.Play(_idleAnim);
-    }
-
     private void Attack(IDamageable target)
     {
         if (_personalAttackTarget == target && CurrentState == UnitStates.Attacking) { return; }
 
-        Velocity = Vector2.Zero;
-        CurrentState = UnitStates.Attacking;
-
-        _animationPlayer.Play(_attackAnim);
-        var direction = GlobalPosition.DirectionTo(target.GlobalPosition);
-        _movement.LookAt(direction);
+        SetState(UnitStates.Attacking, target.GlobalPosition);
     }
-    #endregion
 
     private void StartCombat(IDamageable target)
     {
         Attack(target);
-        AddAttacker(target);
+        HealthComponent.AddAttacker(target);
         TargetCounterattack(target, this);
     }
 
@@ -301,7 +87,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         {
             enemyUnit._combat.TrySetPersonalTarget(attacker);
             enemyUnit.Attack(attacker);
-            enemyUnit.AddAttacker(attacker);
+            enemyUnit.HealthComponent.AddAttacker(attacker);
         }
     }
 
@@ -314,16 +100,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             return;
         }
 
-        _personalAttackTarget.TakeDamage(damage);
-    }
-
-    public void TakeDamage(int damage)
-    {
-        _health -= damage;
-        if (_health <= 0)
-        {
-            Dying();
-        }
+        _personalAttackTarget.HealthComponent.TakeDamage(damage);
     }
 
     public void OnTargetLost()
@@ -338,13 +115,13 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
 
         var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
-        Charge(targetPosition);
+        SetState(UnitStates.Charging, targetPosition);
     }
 
     private void Dying()
     {
-        CurrentState = UnitStates.Dead;
-        foreach (var attacker in Attackers)
+        SetState(UnitStates.Dead);
+        foreach (var attacker in HealthComponent.Attackers)
         {
             if (attacker is Unit unit)
             {
@@ -354,176 +131,9 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
                 }
             }
         }
-        _combat.ClearAttackersList();
+        HealthComponent.ClearAttackersList();
         Die?.Invoke(this);
+        HealthComponent.HealthDepleted -= Dying;
         QueueFree();
-    }
-}
-
-public partial class MovementComponent : Node
-{
-    public Vector2 TargetPosition { get; private set; }
-    public Vector2 LookDirection { get; private set; }
-
-    private CharacterBody2D _body;
-    private Sprite2D _sprite;
-    private float _arrivalDistance;
-    private float _minSpeed;
-    private float _maxSpeed;
-
-    public void Initialize(
-        CharacterBody2D body,
-        Sprite2D sprite2D,
-        float minSpeed,
-        float maxSpeed,
-        float arrivalDistance
-    )
-    {
-        _body = body;
-        _sprite = sprite2D;
-        _minSpeed = minSpeed;
-        _maxSpeed = maxSpeed;
-        _arrivalDistance = arrivalDistance;
-        TargetPosition = _body.GlobalPosition;
-    }
-
-    public void MoveTo(Vector2 targetPosition)
-    {
-        TargetPosition = targetPosition;
-
-        var targetDirection = _body.GlobalPosition.DirectionTo(targetPosition);
-        var distanceToTarget = _body.GlobalPosition.DistanceTo(targetPosition);
-        var currentSpeed = GameMath.CalculateSpeedInThisFrame(
-            _minSpeed,
-            _maxSpeed,
-            distanceToTarget,
-            _arrivalDistance);
-        _body.Velocity = targetDirection * currentSpeed;
-        _body.MoveAndSlide();
-
-        LookAt(targetDirection);
-    }
-
-    public void Stop()
-    {
-        _body.GlobalPosition = TargetPosition;
-        _body.Velocity = Vector2.Zero;
-    }
-
-    public void LookAt(Vector2 targetDirection)
-    {
-        if (targetDirection != Vector2.Zero)
-        {
-            LookDirection = targetDirection;
-        }
-        _sprite.FlipH = LookDirection.X < Constants.Zero;
-    }
-}
-
-public partial class CombatComponent : Node
-{
-    public IDamageable PersonalTarget { get; private set; }
-    public List<IDamageable> Attackers { get; private set; } = [];
-
-    private CollisionObject2D _node;
-    private Area2D _attackDistance;
-    private StringName _enemyGroup;
-    private float _findEnemyTimer;
-    private readonly float _timer = 0.1f;
-
-    public void Initialize(
-        CollisionObject2D collisionObject2D,
-        Area2D attackDistance,
-        StringName enemyGroup
-    )
-    {
-        _node = collisionObject2D;
-        _attackDistance = attackDistance;
-        _enemyGroup = enemyGroup;
-    }
-
-    public IDamageable FindNearestAvailibleEnemy()
-    {
-        var enemies = _attackDistance.GetOverlappingBodies()
-        .OfType<IDamageable>()
-        .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
-        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition));
-
-        foreach (var enemy in enemies)
-        {
-            if (enemy.Attackers.Count < enemy.MaxAttackers)
-            {
-                return enemy;
-            }
-        }
-
-        return null;
-    }
-
-    public bool TrySetPersonalTarget(IDamageable enemy)
-    {
-        if (enemy != null)
-        {
-            PersonalTarget = enemy;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public void ClearAttackersList()
-    {
-        Attackers.Clear();
-    }
-
-    public void AddAttacker(IDamageable attacker)
-    {
-        Attackers.Add(attacker);
-    }
-
-    public IDamageable TickFindEnemy(float delta)
-    {
-        _findEnemyTimer -= delta;
-        if (_findEnemyTimer <= Constants.Zero)
-        {
-            _findEnemyTimer = _timer;
-            var enemy = FindNearestAvailibleEnemy();
-            return enemy;
-        }
-        return null;
-    }
-
-    public void ClearTarget()
-    {
-        PersonalTarget = null;
-    }
-
-    public IUnit GetFrontAlly(Vector2 movementTargetPosition, float formationSpacing, float rayMultiplicator)
-    {
-        var direction = _node.GlobalPosition.DirectionTo(movementTargetPosition);
-        var rayDistance =
-            _node.GlobalPosition +
-            direction *
-            formationSpacing *
-            rayMultiplicator;
-        var spaceState = _node.GetWorld2D().DirectSpaceState;
-
-        var ray = PhysicsRayQueryParameters2D.Create(_node.GlobalPosition, rayDistance);
-        ray.Exclude = [_node.GetRid()];
-        ray.CollisionMask = _node.CollisionLayer;
-
-        var result = spaceState.IntersectRay(ray);
-        if (result.Count > Constants.Zero)
-        {
-            var collider = result["collider"].As<Node2D>();
-            if (collider is IUnit ally)
-            {
-                return ally;
-            }
-        }
-
-        return null;
     }
 }

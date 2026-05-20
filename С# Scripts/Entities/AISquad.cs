@@ -89,7 +89,7 @@ public partial class AISquad : Squad
         {
             if (enemyUnit.CurrentState == UnitStates.Idle)
             {
-                enemyUnit.BattleReady();
+                enemyUnit.SetState(UnitStates.BattleReady);
             }
         }
     }

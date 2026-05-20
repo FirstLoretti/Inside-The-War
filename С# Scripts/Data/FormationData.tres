@@ -4,7 +4,4 @@
 
 [resource]
 script = ExtResource("1_j68nv")
-Cols = 4
-Rows = 4
-Spacing = 60
 metadata/_custom_type_script = "uid://bakjhgxsymxi6"
