@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Managers;
@@ -10,7 +11,6 @@ public partial class PlayerInputHandler : Node2D
     [Export] private SelectionManager _selectionManager;
     [Export] private SpawnManager _spawnManager;
     [Export] private PlayerUnitManager _playerUnitManager;
-
 
     public override void _Input(InputEvent @event)
     {
@@ -37,6 +37,10 @@ public partial class PlayerInputHandler : Node2D
             {
                 _playerUnitManager.MoveSquadTo(mousePosition);
             }
+        }
+        if(@event.IsActionPressed(Constants.SquadChargeInput))
+        {
+            _playerUnitManager.ChargeInputHandler(GetGlobalMousePosition());
         }
     }
 }

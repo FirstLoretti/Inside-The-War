@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using InsideTheWar.Data;
 using InsideTheWar.Entities;
 using InsideTheWar.Helpers;
 using InsideTheWar.Interfaces;
@@ -49,7 +50,7 @@ public partial class SpawnManager : Node2D, ISpawner
         _debug = debug;
     }
 
-    public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, string unitsGroup)
+    public int SpawnSquad(Vector2 spawnPosition, PackedScene unit, StringName unitsGroup, StringName enemyGroup)
     {
         int rows, cols, spacing;
 
@@ -87,6 +88,7 @@ public partial class SpawnManager : Node2D, ISpawner
                     newUnit.Debug = _debug;
                 }
                 newUnit.AddToGroup(unitsGroup);
+                newUnit.EnemyGroup = enemyGroup;
                 var formationData = newUnit.FormationData;
                 var offset = GameMath.GetLocalPositionInFormation(col, row, formationData.Cols, formationData.Rows, formationData.Spacing);
                 newUnit.GlobalPosition = spawnPosition + offset;
@@ -97,26 +99,21 @@ public partial class SpawnManager : Node2D, ISpawner
                     GlobalSignals.SignalName.EntitySpawned,
                     newUnit.GetInstanceId(),
                     newUnit.GlobalPosition,
-                    unitsGroup);
+                    unitsGroup,
+                    enemyGroup);
 
                 if (newUnit.IsInGroup(Constants.PlayerUnits)) //! Рефакторинг
                 {
                     var u = (PlayerUnit)newUnit;
+                    var unitData = (PlayerUnitData)newUnit.Data;
 
                     GlobalSignals.Instance.EmitSignal(
                         GlobalSignals.SignalName.EntityMoved,
-                        newUnit.GetInstanceId(),
+                        u.GetInstanceId(),
                         u.LastSignaledPosition,
-                        newUnit.GlobalPosition,
-                        newUnit.Data.FogVisionDistance);
-
-                    newUnit.EnemyGroup = Constants.AIUnits;
+                        u.GlobalPosition,
+                        unitData.FogVisionDistance);
                 }
-                else
-                {
-                    newUnit.EnemyGroup = Constants.PlayerUnits;
-                }
-
             }
         }
 

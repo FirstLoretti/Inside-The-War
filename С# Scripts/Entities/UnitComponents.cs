@@ -13,7 +13,7 @@ public partial class Unit : CharacterBody2D
     [Export] public FormationData FormationData { get; private set; }
 
     [ExportGroup("Dependencies")]
-    [Export] protected Area2D _attackDistance;
+    [Export] public Area2D _attackDistance;
     [Export] protected AnimationPlayer _animationPlayer;
     [Export] protected Sprite2D _sprite2D;
 
@@ -44,7 +44,7 @@ public partial class Unit : CharacterBody2D
     private CombatComponent _combat = new();
     private UnitDebuger _debuger = new();
     public HealthComponent HealthComponent { get; } = new();
-    private float _checkAttackQueueTimer;
+    private float _formationAdvanceTimer;
 
     public override void _Ready()
     {
@@ -56,7 +56,7 @@ public partial class Unit : CharacterBody2D
 
     private void InitializeComponents()
     {
-        SetAttackDistance();
+       // SetAttackDistance();
         AddMovementComponent();
         AddCombatComponent();
         AddDebuger();
@@ -81,12 +81,13 @@ public partial class Unit : CharacterBody2D
         _combat.Initialize(this, _attackDistance, EnemyGroup);
     }
 
-    private void SetAttackDistance()
-    {
-        var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
-        var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = Data.AttackDistance;
-    }
+    // private void SetAttackDistance()
+    // {
+    //     var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
+    //     var circleShape = (CircleShape2D)collisionShape.Shape;
+    //     circleShape.Radius = Data.AttackDistance;
+    //     GD.Print(circleShape.Radius);
+    // }
 
     private void AddHealthComponent()
     {

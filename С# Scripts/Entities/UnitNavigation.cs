@@ -20,20 +20,16 @@ public partial class Unit : CharacterBody2D
 
         if (CurrentState == UnitStates.BattleReady)
         {
-            if (TickTryStartCombat(deltaFloat))
-            {
-                return;
-            }
+            if (TryStartCombat()) { return; }
+
             TickFormationAdvance(deltaFloat);
             return;
         }
 
         if (CurrentState == UnitStates.Charging)
         {
-            if (TickTryStartCombat(deltaFloat))
-            {
-                return;
-            }
+            if (TryStartCombat()) { return; }
+
             if (IsFrontAllyOnCombat())
             {
                 SetState(UnitStates.BattleReady);
@@ -69,18 +65,21 @@ public partial class Unit : CharacterBody2D
         return false;
     }
 
-    public virtual void MoveTo(Vector2 targetPosition) => SetState(UnitStates.Moving, targetPosition);
+    protected virtual void MoveTo(Vector2 targetPosition) => _movement.MoveTo(targetPosition);
 
     private void TickFormationAdvance(float delta)
     {
-        _checkAttackQueueTimer -= delta;
-        if (_checkAttackQueueTimer > Constants.Zero) { return; }
+        _formationAdvanceTimer -= delta;
+        if (_formationAdvanceTimer > Constants.Zero) { return; }
 
-        _checkAttackQueueTimer = _timer;
+        _formationAdvanceTimer = _timer;
+
         if (GetFrontAlly() is Unit frontAlly)
         {
             if (frontAlly.CurrentState == UnitStates.Attacking || frontAlly.CurrentState == UnitStates.BattleReady) { return; }
+            if (IsFormationSpacingMaintained(frontAlly)) { return; }
         }
+
 
         var distanceToTarget = GlobalPosition.DistanceSquaredTo(MovementTargetPosition);
         if (distanceToTarget > _stoppingDistanceSqr)
@@ -89,9 +88,21 @@ public partial class Unit : CharacterBody2D
         }
         else
         {
-            TickTryStartCombat(Constants.Zero);
+            TryStartCombat();
         }
     }
+
+    private bool IsFormationSpacingMaintained(Unit frontAlly)
+    {
+        var distanceToAlly = GlobalPosition.DistanceSquaredTo(frontAlly.GlobalPosition);
+        var spacingSqr = FormationData.Spacing * FormationData.Spacing;
+        if (distanceToAlly > spacingSqr)
+        {
+            return false;
+        }
+        return true;
+    }
+
     public IUnit GetFrontAlly()
     {
         return _combat.GetFrontAlly(MovementTargetPosition, FormationData.Spacing, CheckAllyRayMultiplicator);
@@ -101,20 +112,7 @@ public partial class Unit : CharacterBody2D
     {
         _movement.Stop();
 
-        if (CurrentState == UnitStates.Charging)
-        {
-            var enemy = _combat.FindNearestAvailibleEnemy();
-            _combat.TrySetPersonalTarget(enemy);
-            if (_personalAttackTarget != null)
-            {
-                StartCombat(_personalAttackTarget);
-            }
-            else
-            {
-                SetState(UnitStates.BattleReady);
-            }
-        }
-        else
+        if (CurrentState != UnitStates.Attacking && CurrentState != UnitStates.BattleReady)
         {
             SetState(UnitStates.Idle);
         }

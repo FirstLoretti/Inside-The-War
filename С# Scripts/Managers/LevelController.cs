@@ -32,11 +32,11 @@ public partial class LevelController : Node
 
         if (unitsGroup == Constants.PlayerUnits)
         {
-            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, Constants.PlayerUnits);
+            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitEngland, Constants.PlayerUnits, Constants.AIUnits);
         }
         else if (unitsGroup == Constants.AIUnits)
         {
-            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, Constants.AIUnits);
+            _spawnManager.SpawnSquad(mousePos, _spawnManager.UnitFrance, Constants.AIUnits, Constants.PlayerUnits);
         }
 
     }

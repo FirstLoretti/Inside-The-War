@@ -10,10 +10,11 @@ public partial class SelectionManager : Node
     [Export] private Node2D _playerUnitsContainer;
     [Export] private int _unitClickOverlapRadius = 25;
 
-    public int UnitClickOverlapRadius => _unitClickOverlapRadius;
+    private List<PlayerUnit> _selectedUnits = [];
 
-    private List<PlayerUnit> _selectedUnits = new();
     public IReadOnlyList<PlayerUnit> SelectedUnits => _selectedUnits;
+    public int SelectedSquadId { get; private set;} = -1;
+    public int UnitClickOverlapRadius => _unitClickOverlapRadius;
 
     public void SelectSquad(Vector2 mousePos)
     {
@@ -28,8 +29,9 @@ public partial class SelectionManager : Node
 
         if (clickedUnit != null)
         {
-            var targetId = clickedUnit.SquadId;
-            var squad = allUnits.Where(u => u.SquadId == targetId);
+            var squadId = clickedUnit.SquadId;
+            var squad = allUnits.Where(u => u.SquadId == squadId);
+            SelectedSquadId = squadId;
 
             foreach (var unit in squad)
             {

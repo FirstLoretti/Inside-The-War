@@ -23,7 +23,7 @@ public partial class UnitManager : Node
         _debug = debug;
     }
 
-    private void OnUnitSpawn(ulong id, Vector2 currentPosition, StringName unitsGroup) // Создание отряда и назначение юнита в отряд
+    private void OnUnitSpawn(ulong id, Vector2 currentPosition, StringName unitsGroup, StringName enemyGroup) // Создание отряда и назначение юнита в отряд
     {
         var obj = InstanceFromId(id);
 
@@ -34,6 +34,7 @@ public partial class UnitManager : Node
                 var newSquad = CreateSquad(unitsGroup);
 
                 newSquad.Debug = _debug;
+                newSquad.Name= unit.SquadId.ToString();
                 AddChild(newSquad);
 
                 _squadsById[unit.SquadId] = newSquad;

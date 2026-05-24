@@ -7,11 +7,21 @@ namespace InsideTheWar.Entities;
 
 public partial class Unit : CharacterBody2D, IUnit, IDamageable
 {
-    private bool TickTryStartCombat(float delta)
+    private bool TryStartCombat()
     {
-        if (TickFindAndSetTarget(delta))
+        if (FindAndSetTarget())
         {
             StartCombat(_personalAttackTarget);
+            return true;
+        }
+        return false;
+    }
+
+    private bool FindAndSetTarget()
+    {
+        var enemy = _combat.FindNearestAvailibleEnemy();
+        if (_combat.TrySetPersonalTarget(enemy))
+        {
             return true;
         }
         return false;
@@ -55,16 +65,6 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
                 }
                 break;
         }
-    }
-
-    private bool TickFindAndSetTarget(float delta)
-    {
-        var enemy = _combat.TickFindEnemy(delta);
-        if (_combat.TrySetPersonalTarget(enemy))
-        {
-            return true;
-        }
-        return false;
     }
 
     private void Attack(IDamageable target)

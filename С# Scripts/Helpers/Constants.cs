@@ -9,5 +9,5 @@ public static class Constants
     public static readonly StringName PlayerUnits = "PlayerUnits";
     public static readonly StringName AIUnits = "AIUnits";
     public static readonly StringName Debuggable = "Debuggable";
-    
+    public static readonly StringName SquadChargeInput = "squad_charge";
 }

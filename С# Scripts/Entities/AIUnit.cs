@@ -2,6 +2,7 @@ using Godot;
 using InsideTheWar.Data;
 using InsideTheWar.Helpers;
 using System;
+using System.Linq;
 
 namespace InsideTheWar.Entities;
 
@@ -46,46 +47,43 @@ public partial class AIUnit : Unit
     public override void _Ready()
     {
         base._Ready();
-        SetVisionDistance();
+        if(_visionDistance.GetChild<CollisionShape2D>(0).Shape is CircleShape2D circleShape2D)
+        {
+            circleShape2D.Radius = AIData.VisionDistance;
+        }
         MinIdleTime = AIData.MaxIdleTime;
         MaxIdleTime = AIData.MaxIdleTime;
     }
 
-    public override void _Process(double delta)
-    {
-        if (CurrentState != UnitStates.Attacking &&
-            CurrentState != UnitStates.BattleReady &&
-            CurrentState != UnitStates.Charging)
-        {
-            TickCheckForEnemiesInFOV((float)delta);
-        }
+    // public override void _PhysicsProcess(double delta)
+    // {
+    //           var enemies = _attackDistance.GetOverlappingBodies()
+    //     // .OfType<IDamageable>()
+    //     // .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
+    //     // .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
+    //     .ToList();
+    //     //GD.Print($"[ЖИВОЙ ЮНИТ] ID: {GetInstanceId()}, Слышит тел: {enemies.Count}");
+    //     if (CurrentState != UnitStates.Attacking && CurrentState != UnitStates.Dead)
+    //     {
+    //         TickCheckForEnemiesInFOV((float)delta);
+    //     }
 
-        if (CurrentState == UnitStates.Idle)
-        {
-            TickIdling((float)delta);
-        }
+    //     if (CurrentState == UnitStates.Idle)
+    //     {
+    //         TickIdling((float)delta);
+    //     }
 
-        base._Process(delta);
-    }
-
-    private void SetVisionDistance()
-    {
-        var collisionShape = _visionDistance.GetChild<CollisionShape2D>(0);
-        var circleShape = (CircleShape2D)collisionShape.Shape;
-        circleShape.Radius = AIData.VisionDistance;
-    }
+    //     base._PhysicsProcess(delta);
+    // }
 
     private void CheckForEnemyInFOV()
     {
-        var entities = _visionDistance.GetOverlappingBodies();
+        var enemy = _visionDistance.GetOverlappingBodies()
+            .FirstOrDefault(e => e.IsInGroup(EnemyGroup));
 
-        foreach (var entity in entities)
+        if (enemy != null)
         {
-            if (entity.IsInGroup(EnemyGroup))
-            {
-                EnemySpotted?.Invoke(entity);
-            }
-            break;
+            EnemySpotted?.Invoke(enemy);
         }
     }
 

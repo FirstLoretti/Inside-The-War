@@ -12,8 +12,7 @@ public partial class CombatComponent : Node
     private CollisionObject2D _node;
     private Area2D _attackDistance;
     private StringName _enemyGroup;
-    private float _findEnemyTimer;
-    private readonly float _timer = 0.1f;
+    private readonly Vector2[] _rayDirections = new Vector2[3];
 
     public void Initialize(
         CollisionObject2D collisionObject2D,
@@ -31,7 +30,8 @@ public partial class CombatComponent : Node
         var enemies = _attackDistance.GetOverlappingBodies()
         .OfType<IDamageable>()
         .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
-        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition));
+        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
+        .ToList();
 
         foreach (var enemy in enemies)
         {
@@ -57,18 +57,6 @@ public partial class CombatComponent : Node
         }
     }
 
-    public IDamageable TickFindEnemy(float delta)
-    {
-        _findEnemyTimer -= delta;
-        if (_findEnemyTimer <= Constants.Zero)
-        {
-            _findEnemyTimer = _timer;
-            var enemy = FindNearestAvailibleEnemy();
-            return enemy;
-        }
-        return null;
-    }
-
     public void ClearTarget()
     {
         PersonalTarget = null;
@@ -77,27 +65,37 @@ public partial class CombatComponent : Node
     public IUnit GetFrontAlly(Vector2 movementTargetPosition, float formationSpacing, float rayMultiplicator)
     {
         var direction = _node.GlobalPosition.DirectionTo(movementTargetPosition);
-        var rayDistance =
-            _node.GlobalPosition +
-            direction *
-            formationSpacing *
-            rayMultiplicator;
+        var rayLength = formationSpacing * rayMultiplicator;
         var spaceState = _node.GetWorld2D().DirectSpaceState;
+        FillRayDirections(direction);
 
-        var ray = PhysicsRayQueryParameters2D.Create(_node.GlobalPosition, rayDistance);
-        ray.Exclude = [_node.GetRid()];
-        ray.CollisionMask = _node.CollisionLayer;
-
-        var result = spaceState.IntersectRay(ray);
-        if (result.Count > Constants.Zero)
+        foreach (var rayDirection in _rayDirections)
         {
-            var collider = result["collider"].As<Node2D>();
-            if (collider is IUnit ally)
+            var rayDistance = _node.GlobalPosition + rayDirection * rayLength;
+            var ray = PhysicsRayQueryParameters2D.Create(_node.GlobalPosition, rayDistance);
+            ray.Exclude = [_node.GetRid()];
+            ray.CollisionMask = _node.CollisionLayer;
+
+            var result = spaceState.IntersectRay(ray);
+            if (result.Count > Constants.Zero)
             {
-                return ally;
+                var collider = result["collider"].As<Node2D>();
+                if (collider is IUnit ally)
+                {
+                    return ally;
+                }
             }
         }
 
         return null;
+    }
+
+    private Vector2[] FillRayDirections(Vector2 centerDirection)
+    {
+        _rayDirections[0] = centerDirection;
+        _rayDirections[1] = centerDirection.Rotated(Mathf.DegToRad(-15.0f));
+        _rayDirections[2] = centerDirection.Rotated(Mathf.DegToRad(15.0f));
+
+        return _rayDirections;
     }
 }

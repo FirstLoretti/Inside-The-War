@@ -51,26 +51,6 @@ public partial class AISquad : Squad
         TargetUpdateAndCharge();
     }
 
-    private void TargetUpdateAndCharge()
-    {
-        GlobalSignals.Instance.EmitRequestSquadUnits(_currentTargetSquadId, (enemyUnits) =>
-        {
-            _chargeUpdateTimer = _chargeUpdateInterval;
-            if (enemyUnits.Count == 0)
-            {
-                _currentTargetSquadId = -1;
-                Idle();
-                return;
-            }
-            
-            _chargeUpdateTimer = _chargeUpdateInterval;
-            var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
-            _combatDirection = (enemySquadCenter - _centerAtBattleStart).Normalized();
-            Charge(enemySquadCenter);
-            WarnEnemyAboutAttack(enemyUnits);
-        });
-    }
-
     private void TickChargeTimer(float delta)
     {
         if (_currentTargetSquadId == -1) { return; }
@@ -80,17 +60,6 @@ public partial class AISquad : Squad
         {
             TargetUpdateAndCharge();
             _chargeUpdateTimer = _chargeUpdateInterval;
-        }
-    }
-
-    private void WarnEnemyAboutAttack(List<Unit> enemyUnits)
-    {
-        foreach (var enemyUnit in enemyUnits)
-        {
-            if (enemyUnit.CurrentState == UnitStates.Idle)
-            {
-                enemyUnit.SetState(UnitStates.BattleReady);
-            }
         }
     }
 

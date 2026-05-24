@@ -1,4 +1,5 @@
 using Godot;
+using InsideTheWar.Data;
 using InsideTheWar.Singletons;
 
 namespace InsideTheWar.Entities;
@@ -15,7 +16,7 @@ public partial class PlayerUnit : Unit
         LastSignaledPosition = GlobalPosition;
     }
 
-    public override void MoveTo(Vector2 targetPosition)
+    protected override void MoveTo(Vector2 targetPosition)
     {
         base.MoveTo(targetPosition);
         CheckFogUpdate();
@@ -23,10 +24,11 @@ public partial class PlayerUnit : Unit
 
     private void CheckFogUpdate()
     {
+        var data = (PlayerUnitData)Data;
         if (GlobalPosition.DistanceTo(LastSignaledPosition) > _updateFogTriggerDistance)
         {
             GlobalSignals.Instance.EmitSignal(GlobalSignals.SignalName.EntityMoved,
-            GetInstanceId(), LastSignaledPosition, GlobalPosition, Data.FogVisionDistance);
+            GetInstanceId(), LastSignaledPosition, GlobalPosition, data.FogVisionDistance);
 
             LastSignaledPosition = GlobalPosition;
         }

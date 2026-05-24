@@ -27,12 +27,26 @@ public partial class PlayerUnitManager : UnitManager
         GlobalSignals.Instance.RequestSquadUnits += OnSquadUnitsRequest;
     }
 
+    public void ChargeInputHandler(Vector2 mousePosition)
+    {
+        var selectedSquadId = _selectionManager.SelectedSquadId;
+        if (selectedSquadId == -1) { return; }
+
+        if (_squadsById.TryGetValue(selectedSquadId, out var squad))
+        {
+            if(squad is PlayerSquad playerSquad)
+            {
+                playerSquad.OnChargeInput(mousePosition, Constants.AIUnits);
+            }
+        }
+    }
+
     public void MoveSquadTo(Vector2 mousePosition)
     {
         var selectedUnits = _selectionManager.SelectedUnits;
         var allUnits = _unitsContainer.GetChildren().OfType<PlayerUnit>().ToArray();
 
-        if (selectedUnits.Count == Constants.Zero) {return;}
+        if (selectedUnits.Count == Constants.Zero) { return; }
 
         foreach (var unit in allUnits)
         {
@@ -57,7 +71,7 @@ public partial class PlayerUnitManager : UnitManager
         {
             var unit = pair.Key as PlayerUnit;
             var point = pair.Value;
-            unit.MoveTo(point);
+            unit.SetState(UnitStates.Moving, point);
         }
     }
 
@@ -73,5 +87,5 @@ public partial class PlayerUnitManager : UnitManager
     {
         base._ExitTree();
         GlobalSignals.Instance.RequestSquadUnits -= OnSquadUnitsRequest;
-    }    
+    }
 }
