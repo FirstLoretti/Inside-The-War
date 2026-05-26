@@ -62,12 +62,11 @@ public partial class CombatComponent : Node
         PersonalTarget = null;
     }
 
-    public IUnit GetFrontAlly(Vector2 movementTargetPosition, float formationSpacing, float rayMultiplicator)
+    public IUnit GetFrontAlly(Vector2 attackDirection, float formationSpacing, float rayMultiplicator)
     {
-        var direction = _node.GlobalPosition.DirectionTo(movementTargetPosition);
         var rayLength = formationSpacing * rayMultiplicator;
         var spaceState = _node.GetWorld2D().DirectSpaceState;
-        FillRayDirections(direction);
+        FillRayDirections(attackDirection);
 
         foreach (var rayDirection in _rayDirections)
         {

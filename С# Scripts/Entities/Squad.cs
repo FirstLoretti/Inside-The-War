@@ -13,8 +13,8 @@ public partial class Squad : Node2D
     public IDebug Debug { get; set; }
 
     protected int _currentTargetSquadId = -1;
-    protected Vector2 _combatDirection;
-    protected Vector2 _centerAtBattleStart;
+    protected Vector2 _attackDirection;
+    protected Vector2 _centerAtStartCharge;
 
     public override void _Ready()
     {
@@ -35,28 +35,19 @@ public partial class Squad : Node2D
 
         if (_currentTargetSquadId == -1) { return; }
 
-        Unit fightingUnit = null;
+        Unit unitInCombat = null;
         foreach (var unit in Units)
         {
             if (unit.CurrentState == UnitStates.Attacking)
             {
-                fightingUnit = unit;
+                unitInCombat = unit;
                 break;
             }
         }
-        
-        if (fightingUnit == null) { return; }
 
-        var newUnitPositions = GameMath.CalculateUnitPositions(Units, fightingUnit.GlobalPosition);
-        foreach (var unitPosition in newUnitPositions)
-        {
-            var unit = unitPosition.Key;
-            var targetPosition = unitPosition.Value;
-            if (unit.CurrentState != UnitStates.Attacking)
-            {
-                unit.SetState(UnitStates.Moving, targetPosition);
-            }
-        }
+        if (unitInCombat == null) { return; }
+
+        SetUnitPositionsAfterStartCombat(unitInCombat);
         _currentTargetSquadId = -1;
     }
 
@@ -94,11 +85,27 @@ public partial class Squad : Node2D
             }
 
             //_chargeUpdateTimer = _chargeUpdateInterval;
-            var enemySquadCenter = GameMath.CalculateSquadCenter(enemyUnits);
-            _combatDirection = (enemySquadCenter - _centerAtBattleStart).Normalized();
+            _centerAtStartCharge = GameMath.CalculateCenterMass(Units);
+            var enemySquadCenter = GameMath.CalculateCenterMass(enemyUnits);
+            _attackDirection = (enemySquadCenter - _centerAtStartCharge).Normalized();
             Charge(enemySquadCenter);
             WarnEnemyAboutAttack(enemyUnits);
         });
+    }
+
+    private void SetUnitPositionsAfterStartCombat(Unit firstUnitInCombat)
+    {
+        var formationCenter = GameMath.CalculateFormationCenterFromFront(firstUnitInCombat, _attackDirection, _centerAtStartCharge);
+        var newUnitPositions = GameMath.CalculateUnitPositions(Units, formationCenter);
+        foreach (var unitPosition in newUnitPositions)
+        {
+            var unit = unitPosition.Key;
+            var targetPosition = unitPosition.Value;
+            if (unit.CurrentState != UnitStates.Attacking)
+            {
+                unit.SetState(UnitStates.Charging, targetPosition, _attackDirection);
+            }
+        }
     }
 
     private void WarnEnemyAboutAttack(List<Unit> enemyUnits)
@@ -115,7 +122,7 @@ public partial class Squad : Node2D
     public void Charge(Vector2 enemySquadCenter)
     {
         var leaderData = Units[0].Data;
-        var attackPoint = enemySquadCenter - _combatDirection * leaderData.AttackDistance;
+        var attackPoint = enemySquadCenter - _attackDirection * leaderData.AttackDistance;
         var unitPositions = GameMath.CalculateUnitPositions(Units, attackPoint);
 
         foreach (var pair in unitPositions)
@@ -125,7 +132,7 @@ public partial class Squad : Node2D
 
             if (unit.CurrentState == UnitStates.Attacking) { continue; }
 
-            unit.SetState(UnitStates.Charging, targetPos);
+            unit.SetState(UnitStates.Charging, targetPos, _attackDirection);
         }
     }
 }

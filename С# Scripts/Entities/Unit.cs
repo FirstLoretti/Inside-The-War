@@ -27,7 +27,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         return false;
     }
 
-    public void SetState(UnitStates unitState, Vector2? target = null)
+    public void SetState(UnitStates unitState, Vector2? targetPosition = null, Vector2? lookDirectionInBattle = null)
     {
         CurrentState = unitState;
         Velocity = Vector2.Zero;
@@ -38,31 +38,25 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
                 _animationPlayer.Play(_idleAnimation);
                 break;
             case UnitStates.BattleReady:
+                _movement.LookAt(_formationLookDirection);
                 _animationPlayer.Play(_idleAnimation);
                 break;
             case UnitStates.WaitingOrder:
                 _animationPlayer.Play(_idleAnimation);
                 break;
             case UnitStates.Moving:
-                if (target.HasValue)
-                {
-                    _movement.MoveTo(target.Value);
-                    _animationPlayer.Play(_runAnimation);
-                }
+                _movement.MoveTo(targetPosition.Value);
+                _animationPlayer.Play(_runAnimation);
                 break;
             case UnitStates.Charging:
-                if (target.HasValue)
-                {
-                    _movement.MoveTo(target.Value);
-                    _animationPlayer.Play(_runAnimation);
-                }
+                _formationLookDirection = lookDirectionInBattle.Value;
+                _movement.MoveTo(targetPosition.Value);
+                _animationPlayer.Play(_runAnimation);
                 break;
             case UnitStates.Attacking:
-                if (target.HasValue)
-                {
-                    _movement.LookAt(target.Value);
-                    _animationPlayer.Play(_attackAnimation);
-                }
+                var enemyDir = (targetPosition.Value - GlobalPosition).Normalized();
+                _movement.LookAt(enemyDir);
+                _animationPlayer.Play(_attackAnimation);
                 break;
         }
     }
@@ -71,23 +65,25 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     {
         if (_personalAttackTarget == target && CurrentState == UnitStates.Attacking) { return; }
 
-        SetState(UnitStates.Attacking, target.GlobalPosition);
+        SetState(UnitStates.Attacking, target.GlobalPosition, _formationLookDirection);
+        _isAttacker = true;
     }
 
     private void StartCombat(IDamageable target)
     {
         Attack(target);
         HealthComponent.AddAttacker(target);
-        TargetCounterattack(target, this);
+        AttackedCounterattack(target, this);
     }
 
-    private void TargetCounterattack(IDamageable target, IDamageable attacker)
+    private void AttackedCounterattack(IDamageable attacked, IDamageable attacker)
     {
-        if (target is Unit enemyUnit)
+        if (attacked is Unit enemyUnit)
         {
             enemyUnit._combat.TrySetPersonalTarget(attacker);
             enemyUnit.Attack(attacker);
             enemyUnit.HealthComponent.AddAttacker(attacker);
+            enemyUnit._isAttacker = false;
         }
     }
 
@@ -106,6 +102,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     public void OnTargetLost()
     {
         _combat.ClearTarget();
+        _animationPlayer.Stop();
 
         var nextTarget = _combat.FindNearestAvailibleEnemy();
         if (nextTarget != null)
@@ -114,8 +111,11 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
             return;
         }
 
-        var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
-        SetState(UnitStates.Charging, targetPosition);
+        if (_isAttacker)
+        {
+            var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
+            SetState(UnitStates.Charging, targetPosition, _formationLookDirection);
+        }
     }
 
     private void Dying()

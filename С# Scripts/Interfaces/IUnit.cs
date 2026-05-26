@@ -11,5 +11,5 @@ public interface IUnit
     FormationData FormationData { get; }
     UnitStates CurrentState { get; }
     ulong Id { get; set; }
-    void SetState(UnitStates unitState, Vector2? target = null);
+    void SetState(UnitStates unitState, Vector2? targetPosition = null, Vector2? lookDirectionInBattle = null);
 }

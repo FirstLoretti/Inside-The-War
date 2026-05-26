@@ -17,7 +17,18 @@ public partial class Unit : CharacterBody2D
     [Export] protected AnimationPlayer _animationPlayer;
     [Export] protected Sprite2D _sprite2D;
 
-    public virtual UnitStates CurrentState { get; protected set; }
+    public UnitStates CurrentState
+    {
+        get => _currentState;
+        protected set
+        {
+            if(_currentState != value)
+            {
+                //GD.Print($"[СТЭЙТ] Юнит {Name} (ID: {Id}): {_currentState} -> {value}");
+            }
+            _currentState = value;
+        }
+    }
     public int SquadId { get; set; }
     public int Row { get; set; }
     public int Col { get; set; }
@@ -45,6 +56,9 @@ public partial class Unit : CharacterBody2D
     private UnitDebuger _debuger = new();
     public HealthComponent HealthComponent { get; } = new();
     private float _formationAdvanceTimer;
+    private Vector2 _formationLookDirection;
+    private UnitStates _currentState;
+    private bool _isAttacker;
 
     public override void _Ready()
     {
@@ -56,7 +70,7 @@ public partial class Unit : CharacterBody2D
 
     private void InitializeComponents()
     {
-       // SetAttackDistance();
+        SetAttackDistance();
         AddMovementComponent();
         AddCombatComponent();
         AddDebuger();
@@ -81,13 +95,13 @@ public partial class Unit : CharacterBody2D
         _combat.Initialize(this, _attackDistance, EnemyGroup);
     }
 
-    // private void SetAttackDistance()
-    // {
-    //     var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
-    //     var circleShape = (CircleShape2D)collisionShape.Shape;
-    //     circleShape.Radius = Data.AttackDistance;
-    //     GD.Print(circleShape.Radius);
-    // }
+    private void SetAttackDistance()
+    {
+        var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
+        var circleShape = (CircleShape2D)collisionShape.Shape;
+        circleShape.Radius = Data.AttackDistance;
+        GD.Print(circleShape.Radius);
+    }
 
     private void AddHealthComponent()
     {

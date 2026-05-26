@@ -77,19 +77,28 @@ public partial class Unit : CharacterBody2D
         if (GetFrontAlly() is Unit frontAlly)
         {
             if (frontAlly.CurrentState == UnitStates.Attacking || frontAlly.CurrentState == UnitStates.BattleReady) { return; }
-            if (IsFormationSpacingMaintained(frontAlly)) { return; }
+            //if (IsFormationSpacingMaintained(frontAlly)) { return; }
         }
 
-
-        var distanceToTarget = GlobalPosition.DistanceSquaredTo(MovementTargetPosition);
-        if (distanceToTarget > _stoppingDistanceSqr)
-        {
-            SetState(UnitStates.Charging, MovementTargetPosition);
-        }
-        else
+        var enemy = _combat.FindNearestAvailibleEnemy();
+        if (enemy != null)
         {
             TryStartCombat();
+            return;
         }
+
+        var stepToAttackDirection = GlobalPosition + _formationLookDirection * FormationData.Spacing;
+        SetState(UnitStates.Charging, stepToAttackDirection, _formationLookDirection);
+        return;
+        // var distanceToTarget = GlobalPosition.DistanceSquaredTo(MovementTargetPosition);
+        // if (distanceToTarget > _stoppingDistanceSqr)
+        // {
+        //     SetState(UnitStates.Charging, MovementTargetPosition, _formationLookDirection);
+        // }
+        // else
+        // {
+        //     TryStartCombat();
+        // }
     }
 
     private bool IsFormationSpacingMaintained(Unit frontAlly)
@@ -103,16 +112,19 @@ public partial class Unit : CharacterBody2D
         return true;
     }
 
-    public IUnit GetFrontAlly()
+    private IUnit GetFrontAlly()
     {
-        return _combat.GetFrontAlly(MovementTargetPosition, FormationData.Spacing, CheckAllyRayMultiplicator);
+        return _combat.GetFrontAlly(_formationLookDirection, FormationData.Spacing, CheckAllyRayMultiplicator);
     }
 
     private void OnReachDestination()
     {
         _movement.Stop();
-
-        if (CurrentState != UnitStates.Attacking && CurrentState != UnitStates.BattleReady)
+        if (CurrentState == UnitStates.Charging)
+        {
+            SetState(UnitStates.BattleReady);
+        }
+        else if (CurrentState != UnitStates.Attacking && CurrentState != UnitStates.BattleReady)
         {
             SetState(UnitStates.Idle);
         }

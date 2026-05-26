@@ -19,24 +19,6 @@ public partial class AIUnit : Unit
     public float MaxIdleTime { get; private set; }
     public float RandomIdleTime { get; set; }
 
-    #region // DebugCurrentState
-    // public override UnitStates CurrentState
-    // {
-    //     get => _currentStateInternal;
-    //     protected set
-    //     {
-    //         if(_currentStateInternal != value)
-    //         {
-    //             GD.Print($"[Unit] {Name}: {_currentStateInternal} -> {value}");
-    //             //GD.Print(System.Environment.StackTrace);
-
-    //             _currentStateInternal = value;
-    //         }
-    //     }
-    // }
-    // private UnitStates _currentStateInternal;
-    #endregion
-
     public event Action<AIUnit> ReadyToAct;
     public event Action<Node2D> EnemySpotted;
 

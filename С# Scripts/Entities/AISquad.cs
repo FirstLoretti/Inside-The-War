@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using Godot;
 using InsideTheWar.Data;
 using InsideTheWar.Helpers;
-using InsideTheWar.Singletons;
+
 namespace InsideTheWar.Entities;
 
 public partial class AISquad : Squad
@@ -46,7 +45,6 @@ public partial class AISquad : Squad
 
         _currentTargetSquadId = enemyUnit.SquadId;
         _chargeUpdateTimer = _chargeUpdateInterval;
-        _centerAtBattleStart = GameMath.CalculateSquadCenter(Units);
 
         TargetUpdateAndCharge();
     }
@@ -74,7 +72,7 @@ public partial class AISquad : Squad
 
         var RandomWaitingTime = GameMath.GetRandomNumber(unit.MinIdleTime, unit.MaxIdleTime);
 
-        var squadCenter = GameMath.CalculateSquadCenter(Units);
+        var squadCenter = GameMath.CalculateCenterMass(Units);
         var squadTargetPosition = GameMath.GetRandomPointInCircle(squadCenter, unit.MovementRadiusMin, unit.MovementRadiusMax);
 
         var assigments = GameMath.CalculateUnitPositions(Units, squadTargetPosition);
@@ -93,7 +91,7 @@ public partial class AISquad : Squad
         if (Debug?.IsEnabled == true && Units.Count > 0)
         {
             var leader = (AIUnitData)Units[0].Data;
-            var squadCenter = GameMath.CalculateSquadCenter(Units);
+            var squadCenter = GameMath.CalculateCenterMass(Units);
             var localCenter = ToLocal(squadCenter);
             //! Vision is a rectangle
             //! Doesn't work correctly if spacing is greater than 80

@@ -55,17 +55,30 @@ public static class GameMath
         }
     }
 
-    public static Vector2 CalculateSquadCenter(IEnumerable<Node2D> units)
+    public static Vector2 CalculateCenterMass(IEnumerable<Node2D> nodes)
     {
         Vector2 squadCenter = Vector2.Zero;
         int count = 0;
-        foreach (var unit in units)
+        foreach (var node in nodes)
         {
-            squadCenter += unit.GlobalPosition;
+            squadCenter += node.GlobalPosition;
             count++;
         }
 
         return squadCenter /= count;
+    }
+
+    public static Vector2 CalculateFormationCenterFromFront(IUnit frontUnit, Vector2 attackDirection, Vector2 centerMass)
+    {
+        var formationData = frontUnit.FormationData;
+        var vectorToFrontUnit = frontUnit.GlobalPosition - centerMass;
+        var passedDistance = vectorToFrontUnit.Dot(attackDirection);
+
+        float halfSquadLength = (formationData.Rows - 1) * formationData.Spacing * 0.5f;
+        var frontFormationCenter = centerMass + attackDirection * passedDistance;
+        var formationCenter = frontFormationCenter - attackDirection * halfSquadLength;
+
+        return formationCenter;
     }
 
     public static Vector2 CalculateAvoidance<T>(Area2D avoidanceArea, T currentUnit) where T : RigidBody2D
@@ -105,7 +118,7 @@ public static class GameMath
     //! Объединение с CalculateSquadOffset?
     public static List<Vector2> GenerateTargetPoints(Vector2 mousePos, int count, int FormationCols, int FormationRows, int FormationSpacing)
     {
-        List<Vector2> points = new();
+        List<Vector2> points = [];
 
         for (int i = 0; i < count; i++)
         {
@@ -121,16 +134,16 @@ public static class GameMath
         return points;
     }
 
-    public static Dictionary<IUnit, Vector2> CalculateUnitPositions(IReadOnlyList<IUnit> units, Vector2 targetPos)
+    public static Dictionary<IUnit, Vector2> CalculateUnitPositions(IReadOnlyList<IUnit> units, Vector2 targetPosition)
     {
-        Dictionary<IUnit, Vector2> unitPositions = new();
+        Dictionary<IUnit, Vector2> unitPositions = [];
 
         var leader = units[0];
         var formationData = leader.FormationData;
-        List<Vector2> points = GenerateTargetPoints(targetPos, units.Count, formationData.Cols, formationData.Rows, formationData.Spacing);
+        List<Vector2> points = GenerateTargetPoints(targetPosition, units.Count, formationData.Cols, formationData.Rows, formationData.Spacing);
 
-        var squadCenter = CalculateSquadCenter(units.Cast<Node2D>());
-        var moveDir = (targetPos - squadCenter).Normalized();
+        var squadCenter = CalculateCenterMass(units.Cast<Node2D>());
+        var moveDir = (targetPosition - squadCenter).Normalized();
         Vector2 sideDir = new(-moveDir.Y, moveDir.X);
 
         var sortedUnits = units

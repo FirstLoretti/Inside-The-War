@@ -57,7 +57,7 @@ public partial class PlayerUnitManager : UnitManager
             }
         }
 
-        var squadCenter = GameMath.CalculateSquadCenter(selectedUnits);
+        var squadCenter = GameMath.CalculateCenterMass(selectedUnits);
 
         if (squadCenter.DistanceTo(mousePosition) < _minSquadMoveDistance)
         {

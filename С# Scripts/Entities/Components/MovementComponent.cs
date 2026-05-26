@@ -49,8 +49,8 @@ public partial class MovementComponent : Node
 
     public void Stop()
     {
-        _body.GlobalPosition = TargetPosition;
         _body.Velocity = Vector2.Zero;
+        _body.GlobalPosition = TargetPosition;
     }
 
     public void LookAt(Vector2 targetDirection)
