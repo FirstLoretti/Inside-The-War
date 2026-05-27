@@ -158,10 +158,13 @@ _data = {
 radius = 27.499998
 height = 84.99999
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_7dlj6"]
+radius = 300.0
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_0p4e8"]
 radius = 60.0
 
-[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_attackDistance", "_animationPlayer", "_sprite2D")]
+[node name="Warrior_Red" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_attackDistance", "_visionDistance", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 collision_mask = 0
@@ -170,6 +173,7 @@ script = ExtResource("1_6cisj")
 Data = ExtResource("2_7dlj6")
 FormationData = ExtResource("3_7dlj6")
 _attackDistance = NodePath("AttackArea2D")
+_visionDistance = NodePath("VisionArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")
 
@@ -184,6 +188,15 @@ libraries/ = SubResource("AnimationLibrary_t7o5p")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=844036501]
 position = Vector2(-2.4999998, -29.999996)
 shape = SubResource("CapsuleShape2D_0p4e8")
+
+[node name="VisionArea2D" type="Area2D" parent="." unique_id=1642090495]
+position = Vector2(0, -27.499994)
+scale = Vector2(0.99999994, 0.99999994)
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea2D" unique_id=1356047836]
+shape = SubResource("CircleShape2D_7dlj6")
 
 [node name="AttackArea2D" type="Area2D" parent="." unique_id=1490166771]
 position = Vector2(0, -27.499998)

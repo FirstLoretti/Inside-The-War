@@ -9,4 +9,5 @@ public partial class UnitData : EntityData
     [Export] public float AttackDistance { get; protected set; } = 60.0f;
     [Export] public int MinDamage { get; protected set; } = 20;
     [Export] public int MaxDamage { get; protected set; } = 30;
+    [Export] public float VisionDistance { get; protected set; } = 200.0f;
 }

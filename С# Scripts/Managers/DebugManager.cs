@@ -5,7 +5,7 @@ namespace InsideTheWar.Managers;
 
 public partial class DebugManager : Node, IDebug
 {
-    private bool _isEnabled = true;
+    private bool _isEnabled;
     private bool _isShowSpawnArea;
     public bool IsEnabled => _isEnabled;
     public bool IsShowSpawnArea => _isShowSpawnArea;

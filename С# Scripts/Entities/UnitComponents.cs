@@ -13,7 +13,8 @@ public partial class Unit : CharacterBody2D
     [Export] public FormationData FormationData { get; private set; }
 
     [ExportGroup("Dependencies")]
-    [Export] public Area2D _attackDistance;
+    [Export] protected Area2D _attackDistance;
+    [Export] protected Area2D _visionDistance;
     [Export] protected AnimationPlayer _animationPlayer;
     [Export] protected Sprite2D _sprite2D;
 
@@ -22,7 +23,7 @@ public partial class Unit : CharacterBody2D
         get => _currentState;
         protected set
         {
-            if(_currentState != value)
+            if (_currentState != value)
             {
                 //GD.Print($"[СТЭЙТ] Юнит {Name} (ID: {Id}): {_currentState} -> {value}");
             }
@@ -70,6 +71,7 @@ public partial class Unit : CharacterBody2D
 
     private void InitializeComponents()
     {
+        SetVisionDistance();
         SetAttackDistance();
         AddMovementComponent();
         AddCombatComponent();
@@ -92,7 +94,7 @@ public partial class Unit : CharacterBody2D
     private void AddCombatComponent()
     {
         AddChild(_combat);
-        _combat.Initialize(this, _attackDistance, EnemyGroup);
+        _combat.Initialize(this, _attackDistance, _visionDistance, EnemyGroup);
     }
 
     private void SetAttackDistance()
@@ -100,7 +102,14 @@ public partial class Unit : CharacterBody2D
         var collisionShape = _attackDistance.GetChild<CollisionShape2D>(0);
         var circleShape = (CircleShape2D)collisionShape.Shape;
         circleShape.Radius = Data.AttackDistance;
-        GD.Print(circleShape.Radius);
+    }
+
+    private void SetVisionDistance()
+    {
+        if (_visionDistance.GetChild<CollisionShape2D>(0).Shape is CircleShape2D circleShape2D)
+        {
+            circleShape2D.Radius = Data.VisionDistance;
+        }
     }
 
     private void AddHealthComponent()

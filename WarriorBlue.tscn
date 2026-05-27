@@ -200,17 +200,17 @@ radius = 300.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_1tjhy"]
 radius = 60.0
 
-[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_visionDistance", "_attackDistance", "_animationPlayer", "_sprite2D")]
+[node name="Warrior_Blue" type="CharacterBody2D" unique_id=1855529046 node_paths=PackedStringArray("_attackDistance", "_visionDistance", "_animationPlayer", "_sprite2D")]
 z_index = 1
 scale = Vector2(0.4, 0.4)
 collision_layer = 2
 collision_mask = 0
 motion_mode = 1
 script = ExtResource("1_uk2px")
-_visionDistance = NodePath("VisionArea2D")
 Data = ExtResource("2_rxecv")
 FormationData = ExtResource("3_1tjhy")
 _attackDistance = NodePath("AttackArea2D")
+_visionDistance = NodePath("VisionArea2D")
 _animationPlayer = NodePath("AnimationPlayer")
 _sprite2D = NodePath("Sprite2D")
 

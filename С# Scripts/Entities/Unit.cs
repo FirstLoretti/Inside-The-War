@@ -19,7 +19,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
 
     private bool FindAndSetTarget()
     {
-        var enemy = _combat.FindNearestAvailibleEnemy();
+        var enemy = _combat.FindEnemyInAttackDistance();
         if (_combat.TrySetPersonalTarget(enemy))
         {
             return true;
@@ -104,18 +104,34 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         _combat.ClearTarget();
         _animationPlayer.Stop();
 
-        var nextTarget = _combat.FindNearestAvailibleEnemy();
-        if (nextTarget != null)
+        var enemyInAttackDistance = _combat.FindEnemyInAttackDistance();
+        if (enemyInAttackDistance != null)
         {
-            StartCombat(nextTarget);
+            StartCombat(enemyInAttackDistance);
             return;
         }
 
-        if (_isAttacker)
+        var enemyInVision = _combat.FindEnemyInVision();
+        GD.Print(enemyInVision);
+        if (enemyInVision != null)
         {
-            var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
-            SetState(UnitStates.Charging, targetPosition, _formationLookDirection);
+            var enemyPosition = enemyInVision.GlobalPosition;
+            var directionToEnemy = (enemyPosition - GlobalPosition).Normalized();
+            SetState(UnitStates.Charging, enemyPosition, directionToEnemy);
+            return;
         }
+
+        SetState(UnitStates.Idle);
+
+        // if (_isAttacker)
+        // {
+        //     var targetPosition = GlobalPosition + _movement.LookDirection * FormationData.Spacing;
+        //     SetState(UnitStates.Charging, targetPosition, _formationLookDirection);
+        // }
+        // else
+        // {
+        //     SetState(UnitStates.BattleReady);
+        // }
     }
 
     private void Dying()

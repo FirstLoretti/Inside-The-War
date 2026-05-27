@@ -1,6 +1,7 @@
 using Godot;
 using InsideTheWar.Data;
 using InsideTheWar.Helpers;
+using InsideTheWar.Interfaces;
 using System;
 using System.Linq;
 
@@ -8,7 +9,6 @@ namespace InsideTheWar.Entities;
 
 public partial class AIUnit : Unit
 {
-    [Export] private Area2D _visionDistance;
     [Export] private float _movementRadiusMin = 50.0f;
     [Export] private float _movementRadiusMax = 200.0f;
 
@@ -29,21 +29,17 @@ public partial class AIUnit : Unit
     public override void _Ready()
     {
         base._Ready();
-        if(_visionDistance.GetChild<CollisionShape2D>(0).Shape is CircleShape2D circleShape2D)
-        {
-            circleShape2D.Radius = AIData.VisionDistance;
-        }
         MinIdleTime = AIData.MaxIdleTime;
         MaxIdleTime = AIData.MaxIdleTime;
     }
 
     // public override void _PhysicsProcess(double delta)
     // {
-    //           var enemies = _attackDistance.GetOverlappingBodies()
-    //     // .OfType<IDamageable>()
-    //     // .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
-    //     // .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
-    //     .ToList();
+    //     var enemies = _attackDistance.GetOverlappingBodies()
+    //         .OfType<IDamageable>()
+    //         .Where(e => e is Node2D node && node.IsInGroup(EnemyGroup))
+    //         .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(GlobalPosition))
+    //         .ToList();
     //     //GD.Print($"[ЖИВОЙ ЮНИТ] ID: {GetInstanceId()}, Слышит тел: {enemies.Count}");
     //     if (CurrentState != UnitStates.Attacking && CurrentState != UnitStates.Dead)
     //     {

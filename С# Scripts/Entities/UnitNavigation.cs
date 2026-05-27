@@ -22,7 +22,7 @@ public partial class Unit : CharacterBody2D
         {
             if (TryStartCombat()) { return; }
 
-            TickFormationAdvance(deltaFloat);
+            TickAdvanceInFormation(deltaFloat);
             return;
         }
 
@@ -67,7 +67,7 @@ public partial class Unit : CharacterBody2D
 
     protected virtual void MoveTo(Vector2 targetPosition) => _movement.MoveTo(targetPosition);
 
-    private void TickFormationAdvance(float delta)
+    private void TickAdvanceInFormation(float delta)
     {
         _formationAdvanceTimer -= delta;
         if (_formationAdvanceTimer > Constants.Zero) { return; }
@@ -80,7 +80,7 @@ public partial class Unit : CharacterBody2D
             //if (IsFormationSpacingMaintained(frontAlly)) { return; }
         }
 
-        var enemy = _combat.FindNearestAvailibleEnemy();
+        var enemy = _combat.FindEnemyInAttackDistance();
         if (enemy != null)
         {
             TryStartCombat();

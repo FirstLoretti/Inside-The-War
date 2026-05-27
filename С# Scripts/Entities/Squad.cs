@@ -15,6 +15,7 @@ public partial class Squad : Node2D
     protected int _currentTargetSquadId = -1;
     protected Vector2 _attackDirection;
     protected Vector2 _centerAtStartCharge;
+    protected bool _isFighting;
 
     public override void _Ready()
     {
@@ -35,20 +36,22 @@ public partial class Squad : Node2D
 
         if (_currentTargetSquadId == -1) { return; }
 
-        Unit unitInCombat = null;
-        foreach (var unit in Units)
+        var unitInCombat = FindFirstUnitInCombat();
+
+        if (unitInCombat == null)
         {
-            if (unit.CurrentState == UnitStates.Attacking)
+            if (_isFighting)
             {
-                unitInCombat = unit;
-                break;
+                CheckEnemySquadStatusAndReact(); //! Need optimization
             }
+            return;
         }
 
-        if (unitInCombat == null) { return; }
-
-        SetUnitPositionsAfterStartCombat(unitInCombat);
-        _currentTargetSquadId = -1;
+        if (!_isFighting)
+        {
+            _isFighting = true;
+            SetUnitPositionsAfterStartCombat(unitInCombat);
+        }
     }
 
     public virtual void OnUnitDie(Unit unit)
@@ -85,12 +88,45 @@ public partial class Squad : Node2D
             }
 
             //_chargeUpdateTimer = _chargeUpdateInterval;
-            _centerAtStartCharge = GameMath.CalculateCenterMass(Units);
-            var enemySquadCenter = GameMath.CalculateCenterMass(enemyUnits);
-            _attackDirection = (enemySquadCenter - _centerAtStartCharge).Normalized();
-            Charge(enemySquadCenter);
-            WarnEnemyAboutAttack(enemyUnits);
+            ChargeAndWarnEnemySquad(enemyUnits);
         });
+    }
+
+    private Unit FindFirstUnitInCombat()
+    {
+        Unit unitInCombat = null;
+        foreach (var unit in Units)
+        {
+            if (unit.CurrentState == UnitStates.Attacking)
+            {
+                unitInCombat = unit;
+                return unitInCombat;
+            }
+        }
+        return null;
+    }
+
+    private void CheckEnemySquadStatusAndReact()
+    {
+        GlobalSignals.Instance.EmitRequestSquadUnits(_currentTargetSquadId, (enemyUnits) =>
+       {
+           if (enemyUnits.Count == 0)
+           {
+               _currentTargetSquadId = -1;
+               _isFighting = false;
+               Idle();
+               return;
+           }
+       });
+    }
+
+    private void ChargeAndWarnEnemySquad(List<Unit> enemyUnits)
+    {
+        _centerAtStartCharge = GameMath.CalculateCenterMass(Units);
+        var enemySquadCenter = GameMath.CalculateCenterMass(enemyUnits);
+        _attackDirection = (enemySquadCenter - _centerAtStartCharge).Normalized();
+        Charge(enemySquadCenter);
+        WarnEnemyAboutAttack(enemyUnits);
     }
 
     private void SetUnitPositionsAfterStartCombat(Unit firstUnitInCombat)

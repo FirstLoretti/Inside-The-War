@@ -11,21 +11,24 @@ public partial class CombatComponent : Node
 
     private CollisionObject2D _node;
     private Area2D _attackDistance;
+    private Area2D _visionDistance;
     private StringName _enemyGroup;
     private readonly Vector2[] _rayDirections = new Vector2[3];
 
     public void Initialize(
         CollisionObject2D collisionObject2D,
         Area2D attackDistance,
+        Area2D visionDistance,
         StringName enemyGroup
     )
     {
         _node = collisionObject2D;
         _attackDistance = attackDistance;
+        _visionDistance = visionDistance;
         _enemyGroup = enemyGroup;
     }
 
-    public IDamageable FindNearestAvailibleEnemy()
+    public IDamageable FindEnemyInAttackDistance()
     {
         var enemies = _attackDistance.GetOverlappingBodies()
         .OfType<IDamageable>()
@@ -40,7 +43,24 @@ public partial class CombatComponent : Node
                 return enemy;
             }
         }
+        return null;
+    }
 
+    public IDamageable FindEnemyInVision()
+    {
+        var enemies =_visionDistance.GetOverlappingBodies()
+        .OfType<IDamageable>()
+        .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
+        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
+        .ToList();
+
+        foreach (var enemy in enemies)
+        {   
+            if (enemy.HealthComponent.Attackers.Count < enemy.HealthComponent.MaxAttackers)
+            {
+                return enemy;
+            }
+        }
         return null;
     }
 
