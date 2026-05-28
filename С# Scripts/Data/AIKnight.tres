@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1_egk1v")
-VisionDistance = 300.0
 AttackDistance = 120.0
+VisionDistance = 600.0
 metadata/_custom_type_script = "uid://cf232xvbetwux"

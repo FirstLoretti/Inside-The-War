@@ -1,6 +1,5 @@
 using Godot;
 using InsideTheWar.Helpers;
-using InsideTheWar.Data;
 using InsideTheWar.Interfaces;
 
 namespace InsideTheWar.Entities;
@@ -73,6 +72,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
     {
         Attack(target);
         HealthComponent.AddAttacker(target);
+        GD.Print(target + EnemyGroup);
         AttackedCounterattack(target, this);
     }
 
@@ -112,7 +112,7 @@ public partial class Unit : CharacterBody2D, IUnit, IDamageable
         }
 
         var enemyInVision = _combat.FindEnemyInVision();
-        GD.Print(enemyInVision);
+       // GD.Print(enemyInVision);
         if (enemyInVision != null)
         {
             var enemyPosition = enemyInVision.GlobalPosition;

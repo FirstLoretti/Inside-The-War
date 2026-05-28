@@ -6,6 +6,5 @@
 script = ExtResource("1_86yus")
 FogVisionDistance = 6
 AttackDistance = 120.0
-MinDamage = 30
-MaxDamage = 40
+VisionDistance = 600.0
 metadata/_custom_type_script = "uid://dskdhh0e2rs1q"

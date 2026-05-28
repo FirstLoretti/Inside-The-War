@@ -1,6 +1,7 @@
 using Godot;
 using InsideTheWar.Helpers;
 using InsideTheWar.Interfaces;
+using System.Diagnostics.Tracing;
 using System.Linq;
 
 namespace InsideTheWar.Entities.Components;
@@ -31,10 +32,14 @@ public partial class CombatComponent : Node
     public IDamageable FindEnemyInAttackDistance()
     {
         var enemies = _attackDistance.GetOverlappingBodies()
-        .OfType<IDamageable>()
-        .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
-        .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
-        .ToList();
+             .OfType<IDamageable>()
+             .Where(e => e is Node2D node &&
+                 IsInstanceValid(node) &&
+                 node is Unit unit &&
+                 unit.CurrentState != UnitStates.Dead &&
+                 unit.IsInGroup(_enemyGroup))
+             .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
+             .ToList();
 
         foreach (var enemy in enemies)
         {
@@ -48,16 +53,30 @@ public partial class CombatComponent : Node
 
     public IDamageable FindEnemyInVision()
     {
-        var enemies =_visionDistance.GetOverlappingBodies()
+        var enemies = _visionDistance.GetOverlappingBodies()
         .OfType<IDamageable>()
-        .Where(e => e is Node2D node && node.IsInGroup(_enemyGroup))
+        .Where(e => e is Node2D node &&
+            IsInstanceValid(node) &&
+            node is Unit unit &&
+            unit.CurrentState != UnitStates.Dead &&
+            unit.IsInGroup(_enemyGroup))
         .OrderBy(e => e.GlobalPosition.DistanceSquaredTo(_node.GlobalPosition))
         .ToList();
+        
+        if (enemies.Count > 0)
+        {
+            var firstEnemy = enemies.First();
+            if (firstEnemy.HealthComponent.Attackers.Count > 0)
+            {
+                GD.Print($"--- Лог: Враг {((Node2D)firstEnemy).Name} занят, ищем дальше... ---");
+            }
+        }
 
         foreach (var enemy in enemies)
-        {   
+        {
             if (enemy.HealthComponent.Attackers.Count < enemy.HealthComponent.MaxAttackers)
             {
+                GD.Print("find");
                 return enemy;
             }
         }
